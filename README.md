@@ -1,7 +1,7 @@
 # RDP Wrapper
-[![Release](https://img.shields.io/github/v/release/sergiye/rdpWrapper?style=for-the-badge)](https://github.com/sergiye/rdpWrapper/releases/latest)
-![Downloads](https://img.shields.io/github/downloads/sergiye/rdpWrapper/total?style=for-the-badge&color=ff4f42)
-![Last commit](https://img.shields.io/github/last-commit/sergiye/rdpWrapper?style=for-the-badge&color=00AD00)
+[![Release](https://img.shields.io/github/v/release/rdp-wrapper/rdpWrapper?style=for-the-badge)](https://github.com/rdp-wrapper/rdpWrapper/releases/latest)
+![Downloads](https://img.shields.io/github/downloads/rdp-wrapper/rdpWrapper/total?style=for-the-badge&color=ff4f42)
+![Last commit](https://img.shields.io/github/last-commit/rdp-wrapper/rdpWrapper?style=for-the-badge&color=00AD00)
 
 ----
 
@@ -37,17 +37,17 @@ The application is portable and has the following features:
 
 Here's a preview of the app's UI running on Windows 10:
 
-[<img src="https://github.com/sergiye/rdpWrapper/raw/master/preview.png" alt="Themes" width="300"/>](https://raw.githubusercontent.com/sergiye/rdpWrapper/master/preview.png)
+[<img src="https://github.com/rdp-wrapper/rdpWrapper/raw/master/preview.png" alt="Themes" width="300"/>](https://raw.githubusercontent.com/rdp-wrapper/rdpWrapper/master/preview.png)
 
 
 ## Download
 
 **The recommended way to get the program is BUILD from source**
 - Install git, Visual Studio
-- `git clone https://github.com/sergiye/rdpWrapper.git`
+- `git clone https://github.com/rdp-wrapper/rdpWrapper.git`
 - build
 
-**or download build from [releases](https://github.com/sergiye/rdpWrapper/releases).**
+**or download build from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).**
 
 ## How can I help improve it?
 The rdpWrapper team welcomes feedback and contributions!<br/>
