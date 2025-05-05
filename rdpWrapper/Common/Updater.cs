@@ -37,6 +37,7 @@ namespace sergiye.Common {
   internal static class Updater {
     internal static readonly string ApplicationName;
     internal static readonly string ApplicationTitle;
+    internal static readonly string ApplicationCompany;
     internal static readonly string selfFileName;
     internal static readonly string CurrentVersion;
     internal static readonly string CurrentFileLocation;
@@ -45,6 +46,7 @@ namespace sergiye.Common {
       var asm = Assembly.GetExecutingAssembly(); //typeof(Updater).Assembly
       ApplicationName = asm.GetName().Name;
       ApplicationTitle = GetAttribute<AssemblyTitleAttribute>(asm)?.Title;
+      ApplicationCompany = GetAttribute<AssemblyCompanyAttribute>(asm)?.Company;
       CurrentVersion = asm.GetName().Version.ToString(3); //Application.ProductVersion;
       CurrentFileLocation = asm.Location;
       selfFileName = Path.GetFileName(CurrentFileLocation);
@@ -61,7 +63,7 @@ namespace sergiye.Common {
     }
 
     private static string GetAppReleasesUrl() {
-      return $"https://api.github.com/repos/sergiye/{ApplicationName}/releases";
+      return $"https://api.github.com/repos/{ApplicationCompany}/{ApplicationName}/releases";
     }
     
     /// <summary>

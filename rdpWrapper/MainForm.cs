@@ -119,7 +119,7 @@ namespace rdpWrapper {
         case MfSysMenuAboutId:
           var asm = GetType().Assembly;
           if (MessageBox.Show($"{Updater.ApplicationTitle} {asm.GetName().Version.ToString(3)} {(Environment.Is64BitProcess ? "x64" : "x32")}\nWritten by Sergiy Egoshyn (egoshin.sergey@gmail.com)\nDo you want to know more?", Updater.ApplicationTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) {
-            Process.Start("https://github.com/sergiye/" + Updater.ApplicationName);
+            Process.Start($"https://github.com/{Updater.ApplicationCompany}/{Updater.ApplicationName}");
           }
           break;
         case MfSysMenuCheckUpdates:
