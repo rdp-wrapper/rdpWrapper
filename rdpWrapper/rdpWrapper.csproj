@@ -24,6 +24,8 @@
     <None Remove="externals\rdpwrap.ini" />
     <None Remove="externals\RDPWrapOffsetFinder.exe" />
     <None Remove="externals\Zydis.dll" />
+	<None Remove="externals\autoupdate.bat" />
+	<None Remove="externals\rdpwrap_templete.ini" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="MainForm.Designer.cs">
@@ -42,6 +44,8 @@
     <EmbeddedResource Include="externals\rdpwrap.ini" />
     <EmbeddedResource Include="externals\RDPWrapOffsetFinder.exe" />
     <EmbeddedResource Include="externals\Zydis.dll" />
+	<EmbeddedResource Include="externals\autoupdate.bat" />
+	<EmbeddedResource Include="externals\rdpwrap_templete.ini" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

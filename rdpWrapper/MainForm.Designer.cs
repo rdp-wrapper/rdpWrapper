@@ -37,6 +37,7 @@ namespace rdpWrapper {
       this.gbxStatus = new System.Windows.Forms.GroupBox();
       this.btnUninstall = new System.Windows.Forms.Button();
       this.btnInstall = new System.Windows.Forms.Button();
+      this.btnAutoUpdateSchedule = new System.Windows.Forms.Button();
       this.btnGenerate = new System.Windows.Forms.Button();
       this.txtServiceVersion = new System.Windows.Forms.TextBox();
       this.lblSupported = new System.Windows.Forms.Label();
@@ -182,6 +183,7 @@ namespace rdpWrapper {
       // panActions
       // 
       this.panActions.Controls.Add(this.btnTest);
+      this.panActions.Controls.Add(this.btnAutoUpdateSchedule);
       this.panActions.Controls.Add(this.btnClose);
       this.panActions.Controls.Add(this.btnApply);
       this.panActions.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -302,6 +304,16 @@ namespace rdpWrapper {
       this.btnInstall.Text = "Install";
       this.btnInstall.Visible = false;
       this.btnInstall.Click += new System.EventHandler(this.btnInstall_Click);
+      // 
+      // btnAutoUpdateSchedule
+      // 
+      this.btnAutoUpdateSchedule.Location = new System.Drawing.Point(83, 4);
+      this.btnAutoUpdateSchedule.Margin = new System.Windows.Forms.Padding(2);
+      this.btnAutoUpdateSchedule.Name = "btnAutoUpdateSchedule";
+      this.btnAutoUpdateSchedule.Size = new System.Drawing.Size(67, 23);
+      this.btnAutoUpdateSchedule.TabIndex = 1;
+      this.btnAutoUpdateSchedule.Text = "AutoUpdate";
+      this.btnAutoUpdateSchedule.Click += new System.EventHandler(this.btnAutoUpdateSchedule_Click);
       // 
       // btnGenerate
       // 
@@ -489,6 +501,7 @@ namespace rdpWrapper {
     private Button btnGenerate;
     private rdpWrapper.SimplTextBox txtLog;
     private Button btnInstall;
+    private Button btnAutoUpdateSchedule;
     private Button btnUninstall;
   }
 }

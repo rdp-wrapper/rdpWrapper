@@ -38,6 +38,10 @@ namespace rdpWrapper {
     
     private const string RdpWrapDllName = "rdpwrap.dll";
     private const string RdpWrapIniName = "rdpwrap.ini";
+    private const string RdpWrapTempIniName = "rdpwrap_templete.ini";
+    private const string OffsetFinderName = "RDPWrapOffsetFinder.exe";
+    private const string ZydisName = "Zydis.dll";
+    private const string AutoupdateName = "autoupdate.bat";
     private const string TermSrvName = "termsrv.dll";
     private const string RdpServiceName = "TermService";
 
@@ -625,9 +629,91 @@ namespace rdpWrapper {
       }
     }
 
+    // autoupdate
+    private void btnAutoUpdateSchedule_Click(object sender, EventArgs e) {
+      try {
+      // Extract required files to wrapperFolderPath
+        var offsetFinderPath = ExtractResourceFile(OffsetFinderName, wrapperFolderPath);
+        var zydisPath = ExtractResourceFile(ZydisName, wrapperFolderPath);
+        var autoUpdatePath = ExtractResourceFile(AutoupdateName, wrapperFolderPath);
+        var RdpWrapTempIniPath = ExtractResourceFile(RdpWrapTempIniName, wrapperFolderPath);
+        if (string.IsNullOrEmpty(offsetFinderPath) || string.IsNullOrEmpty(zydisPath) || string.IsNullOrEmpty(autoUpdatePath) || string.IsNullOrEmpty(RdpWrapTempIniPath)) {
+          MessageBox.Show("Failed to extract required files.", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+          return;
+        }
+
+        // Create the scheduled task
+        var taskName = "RDP Wrapper Autoupdate";
+        var processInfo = new ProcessStartInfo {
+          FileName = "schtasks.exe",
+          Arguments = $"/Create /TN \"{taskName}\" /TR \"\\\"{autoUpdatePath}\\\"\" /SC ONSTART /F /RU SYSTEM",
+          RedirectStandardOutput = true,
+          RedirectStandardError = true,
+          UseShellExecute = false,
+          CreateNoWindow = true
+        };
+
+        logger.Log($"Executing command: schtasks.exe {processInfo.Arguments}", Logger.StateKind.Info);
+
+        var process = new Process { StartInfo = processInfo };
+        process.Start();
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        if (process.ExitCode == 0) {
+        MessageBox.Show("Scheduled task created successfully.", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        else {
+        logger.Log($"Failed to create scheduled task. Output: {output}, Error: {error}", Logger.StateKind.Error);
+        MessageBox.Show($"Failed to create scheduled task.\nError: {error}", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+      }
+      catch (Exception ex) {
+        var message = "Error creating scheduled task: " + ex.Message;
+        logger.Log(message, Logger.StateKind.Error);
+        MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+      }
+    }
+
     private void btnUninstall_Click(object sender, EventArgs e) {
       try {
         btnUninstall.Enabled = false;
+        // Remove the scheduled task
+        logger.Log("Removing scheduled task...");
+        try {
+        var taskName = "RDP Wrapper Autoupdate";
+        var processInfo = new ProcessStartInfo {
+          FileName = "schtasks.exe",
+          Arguments = $"/Delete /TN \"{taskName}\" /F",
+          RedirectStandardOutput = true,
+          RedirectStandardError = true,
+          UseShellExecute = false,
+          CreateNoWindow = true
+        };
+
+        logger.Log($"Executing command: schtasks.exe {processInfo.Arguments}", Logger.StateKind.Info);
+
+        var process = new Process { StartInfo = processInfo };
+        process.Start();
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        if (process.ExitCode == 0) {
+          logger.Log("Scheduled task removed successfully.", Logger.StateKind.Info);
+        }
+        else {
+        // Don't stop the uninstall process if the task removal fails
+        logger.Log($"Failed to remove scheduled task: {error}", Logger.StateKind.Info);
+        }
+        }
+        catch (Exception ex) {
+        // Log but continue with uninstall even if task removal fails
+        logger.Log($"Error removing scheduled task: {ex.Message}", Logger.StateKind.Info);
+        }
+
+
         logger.Log("Resetting service library...");
         using var reg = Registry.LocalMachine.OpenSubKey(RegTermServiceKey + "\\Parameters", writable: true);
         if (reg == null) {
