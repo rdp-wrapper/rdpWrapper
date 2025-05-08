@@ -1,12 +1,9 @@
-﻿using Microsoft.Win32;
-using sergiye.Common;
+﻿using sergiye.Common;
 using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.ServiceProcess;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
@@ -21,36 +18,13 @@ namespace rdpWrapper {
     private const int MfSysMenuCheckUpdates = 1000;
     private const int MfSysMenuAboutId = 1001;
 
-    private const string RegKey = @"SYSTEM\CurrentControlSet\Control\Terminal Server";
-    private const string RegTermServiceKey = @"SYSTEM\CurrentControlSet\Services\TermService";
-    private const string RegRdpKey = @"SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp";
-    private const string RegWinLogonKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System";
-    private const string RegTsKey = @"SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services";
-
-    private const string ValueSingleSession = "fSingleSessionPerUser";
-    private const string ValueDenyTsConnections = "fDenyTSConnections";
-    private const string ValuePort = "PortNumber";
-    private const string ValueDontDisplayLastUserName = "DontDisplayLastUsername";
-    private const string ValueHonorLegacy = "HonorLegacySettings";
-    private const string ValueNla = "UserAuthentication";
-    private const string ValueSecurity = "SecurityLayer";
-    private const string ValueShadow = "Shadow";
-    
-    private const string RdpWrapDllName = "rdpwrap.dll";
-    private const string RdpWrapIniName = "rdpwrap.ini";
-    private const string TermSrvName = "termsrv.dll";
-    private const string RdpServiceName = "TermService";
-
     private int oldPort;
     private string wrapperIniLastPath;
     private DateTime wrapperIniLastChecked = DateTime.MinValue;
     private bool wrapperIniLastSupported;
-
-    private readonly string termSrvFile;
-    private readonly string wrapperFolderPath;
     private readonly Timer refreshTimer;
     private readonly Logger logger;
-    private readonly ServiceHelper serviceHelper;
+    private readonly Wrapper wrapper;
 
     public MainForm() {
 
@@ -63,8 +37,9 @@ namespace rdpWrapper {
       logger = new Logger();
       logger.OnNewLogEvent += AddToLog;
       logger.Log($"Application started: {title}", Logger.StateKind.Info, false);
-
-      serviceHelper = new ServiceHelper(logger);
+      
+      wrapper = new Wrapper(logger);
+      wrapper.OnError += message => MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error); 
       
       rgNLAOptions.Items.AddRange([
         "GUI Authentication Only", 
@@ -89,10 +64,6 @@ namespace rdpWrapper {
       Theme.SetAutoTheme();
       Theme.Current.Apply(this);
       btnTheme.Text = Theme.Current.DisplayName;
-
-      termSrvFile = Path.Combine(Environment.SystemDirectory, TermSrvName);
-      //string programFilesX86 = Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%");
-      wrapperFolderPath = Path.Combine(Environment.ExpandEnvironmentVariables("%ProgramW6432%"), "RDP Wrapper");
 
       refreshTimer = new Timer();
       refreshTimer.Tick += TimerTick;
@@ -137,36 +108,20 @@ namespace rdpWrapper {
       try {
         logger.Log("Retrieving system configuration...");
 
-        using (var key = Registry.LocalMachine.OpenSubKey(RegKey)) {
-          if (key != null) {
-            cbxSingleSessionPerUser.Checked = Convert.ToInt32(key.GetValue(ValueSingleSession, 0)) != 0;
-            cbxAllowTSConnections.Checked = Convert.ToInt32(key.GetValue(ValueDenyTsConnections, 0)) == 0;
-            cbxHonorLegacy.Checked = Convert.ToInt32(key.GetValue(ValueHonorLegacy, 0)) != 0;
-          }
-        }
+        cbxSingleSessionPerUser.Checked = wrapper.SingleSessionPerUser;
+        cbxAllowTSConnections.Checked = wrapper.AllowTsConnections;
+        cbxHonorLegacy.Checked = wrapper.HonorLegacy;
+        seRDPPort.Value = oldPort = wrapper.RdpPort;
+        
+        rgNLAOptions.SelectedIndex = wrapper.SecurityLayer switch {
+          0 when wrapper.UserAuthentication == 0 => 0,
+          1 when wrapper.UserAuthentication == 0 => 1,
+          2 when wrapper.UserAuthentication == 1 => 2,
+          _ => rgNLAOptions.SelectedIndex
+        };
 
-        using (var key = Registry.LocalMachine.OpenSubKey(RegRdpKey)) {
-          if (key != null) {
-            oldPort = Convert.ToInt32(key.GetValue(ValuePort, 3389));
-            seRDPPort.Value = oldPort;
-            var userAuthentication = Convert.ToInt32(key.GetValue(ValueNla, 0));
-            var securityLayer = Convert.ToInt32(key.GetValue(ValueSecurity, 0));
-
-            rgNLAOptions.SelectedIndex = securityLayer switch {
-              0 when userAuthentication == 0 => 0,
-              1 when userAuthentication == 0 => 1,
-              2 when userAuthentication == 1 => 2,
-              _ => rgNLAOptions.SelectedIndex
-            };
-
-            rgShadowOptions.SelectedIndex = Convert.ToInt32(key.GetValue(ValueShadow, 0));
-          }
-        }
-
-        using (var key = Registry.LocalMachine.OpenSubKey(RegWinLogonKey)) {
-          if (key != null)
-            cbDontDisplayLastUser.Checked = Convert.ToInt32(key.GetValue(ValueDontDisplayLastUserName, 0)) != 0;
-        }
+        rgShadowOptions.SelectedIndex = wrapper.ShadowOptions;
+        cbDontDisplayLastUser.Checked = wrapper.DontDisplayLastUser;
 
         logger.Log(" Done", Logger.StateKind.Info, false);
         TimerTick(null, EventArgs.Empty);
@@ -202,53 +157,39 @@ namespace rdpWrapper {
     }
 
     private void btnApply_Click(object sender, EventArgs e) {
+      
       try {
-        using (var key = Registry.LocalMachine.OpenSubKey(RegKey, writable: true)) {
-          if (key != null) {
-            key.SetValue(ValueSingleSession, cbxSingleSessionPerUser.Checked ? 1 : 0, RegistryValueKind.DWord);
-            key.SetValue(ValueDenyTsConnections, cbxAllowTSConnections.Checked ? 0 : 1, RegistryValueKind.DWord);
-            key.SetValue(ValueHonorLegacy, cbxHonorLegacy.Checked ? 1 : 0, RegistryValueKind.DWord);
-          }
-        }
-
+        wrapper.SingleSessionPerUser = cbxSingleSessionPerUser.Checked;
+        wrapper.AllowTsConnections = cbxAllowTSConnections.Checked;
+        wrapper.HonorLegacy = cbxHonorLegacy.Checked;
+        
         var newPort = (int)seRDPPort.Value;
         if (oldPort != newPort) {
-          var p = StartProcess("netsh", $"advfirewall firewall set rule name=\"Remote Desktop\" new localport={newPort}");
+          var p = Wrapper.StartProcess("netsh", $"advfirewall firewall set rule name=\"Remote Desktop\" new localport={newPort}");
           p.WaitForExit();
           logger.Log($"Firewall rule added for port {newPort}", Logger.StateKind.Info);
         }
 
-        using (var key = Registry.LocalMachine.OpenSubKey(RegRdpKey, true)) {
-          if (key != null) {
-            key.SetValue(ValuePort, newPort, RegistryValueKind.DWord);
-            oldPort = newPort;
-
-            switch (rgNLAOptions.SelectedIndex) {
-              case 0:
-                key.SetValue(ValueNla, 0, RegistryValueKind.DWord);
-                key.SetValue(ValueSecurity, 0, RegistryValueKind.DWord);
-                break;
-              case 1:
-                key.SetValue(ValueNla, 0, RegistryValueKind.DWord);
-                key.SetValue(ValueSecurity, 1, RegistryValueKind.DWord);
-                break;
-              case 2:
-                key.SetValue(ValueNla, 1, RegistryValueKind.DWord);
-                key.SetValue(ValueSecurity, 2, RegistryValueKind.DWord);
-                break;
-            }
-
-            key.SetValue(ValueShadow, rgShadowOptions.SelectedIndex, RegistryValueKind.DWord);
-          }
+        oldPort = wrapper.RdpPort = newPort;
+        switch (rgNLAOptions.SelectedIndex) {
+          case 0:
+            wrapper.UserAuthentication = 0;
+            wrapper.SecurityLayer = 0;
+            break;
+          case 1:
+            wrapper.UserAuthentication = 0;
+            wrapper.SecurityLayer = 1;
+            break;
+          case 2:
+            wrapper.UserAuthentication = 1;
+            wrapper.SecurityLayer = 2;
+            break;
         }
+        wrapper.ShadowOptions = rgShadowOptions.SelectedIndex;
+        wrapper.DontDisplayLastUser = cbDontDisplayLastUser.Checked;
 
-        using (var key = Registry.LocalMachine.CreateSubKey(RegTsKey)) {
-          key?.SetValue(ValueShadow, rgShadowOptions.SelectedIndex, RegistryValueKind.DWord);
-        }
-
-        using (var key = Registry.LocalMachine.CreateSubKey(RegWinLogonKey)) {
-          key?.SetValue(ValueDontDisplayLastUserName, cbDontDisplayLastUser.Checked ? 1 : 0, RegistryValueKind.DWord);
-        }
+        wrapper.SaveSettings();
+        
         btnApply.Enabled = false;
         logger.Log("Settings applied", Logger.StateKind.Info);
       }
@@ -263,27 +204,12 @@ namespace rdpWrapper {
       btnApply.Enabled = true;
     }
 
-    private static Process StartProcess(string app, string arg, string workingDir = null) {
-
-      var p = new Process();
-      p.StartInfo.UseShellExecute = true;
-      p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-      p.StartInfo.FileName = app;
-      p.StartInfo.WorkingDirectory = (workingDir ?? Path.GetDirectoryName(app)) ?? string.Empty;
-      p.StartInfo.Arguments = arg;
-      p.StartInfo.RedirectStandardOutput = false;
-      p.StartInfo.RedirectStandardInput = false;
-      p.StartInfo.RedirectStandardError = false;
-      p.Start();
-      return p;
-    }
-
     private void btnRestartService_Click(object sender, EventArgs e) {
       try {
         btnRestartService.Enabled = false;
         //todo: async
-        serviceHelper.StopService(RdpServiceName, TimeSpan.FromSeconds(10));
-        serviceHelper.StartService(RdpServiceName, TimeSpan.FromSeconds(10));
+        wrapper.StopService(TimeSpan.FromSeconds(10));
+        wrapper.StartService(TimeSpan.FromSeconds(10));
       }
       catch (Exception ex) {
         var message = "Error restarting service: " + ex.Message;
@@ -295,48 +221,10 @@ namespace rdpWrapper {
       }
     }
 
-    private static short IsWrapperInstalled(out string wrapperPath) {
-      wrapperPath = string.Empty;
-      try {
-        using (var serviceKey = Registry.LocalMachine.OpenSubKey(RegTermServiceKey)) {
-          if (serviceKey == null)
-            return -1;
-          var termServiceHost = serviceKey.GetValue("ImagePath") as string;
-          if (string.IsNullOrWhiteSpace(termServiceHost) || !termServiceHost.ToLower().Contains("svchost.exe"))
-            return 2;
-        }
-
-        string termServicePath;
-        using (var paramKey = Registry.LocalMachine.OpenSubKey(RegTermServiceKey + "\\Parameters")) {
-          if (paramKey == null)
-            return -1;
-
-          termServicePath = paramKey.GetValue("ServiceDll") as string;
-          if (string.IsNullOrWhiteSpace(termServicePath))
-            return -1;
-        }
-
-        var lowerPath = termServicePath.ToLower();
-        if (!lowerPath.Contains(TermSrvName) && !lowerPath.Contains(RdpWrapDllName))
-          return 2;
-
-        if (!lowerPath.Contains(RdpWrapDllName)) return 0;
-        wrapperPath = termServicePath;
-        return 1;
-      }
-      catch {
-        return -1;
-      }
-    }
-
-    private static string GetVersionString(FileVersionInfo versionInfo) {
-      return versionInfo.ProductMajorPart + "." + versionInfo.ProductMinorPart + "." + versionInfo.ProductBuildPart + "." + versionInfo.ProductPrivatePart;
-    }
-
     private void TimerTick(object sender, EventArgs e) {
 
       var checkSupported = false;
-      var wrapperInstalled = IsWrapperInstalled(out var wrapperPath);
+      var wrapperInstalled = wrapper.CheckWrapperInstalled();
       switch (wrapperInstalled) {
         case -1:
           lblWrapperStateValue.Text = "Unknown";
@@ -354,10 +242,10 @@ namespace rdpWrapper {
           lblWrapperStateValue.Text = "Installed";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusOkColor;
           string wrapperIniPath = null;
-          if (!string.IsNullOrEmpty(wrapperPath)) {
-            var wrappedDir = Path.GetDirectoryName(wrapperPath);
+          if (!string.IsNullOrEmpty(wrapper.WrapperPath)) {
+            var wrappedDir = Path.GetDirectoryName(wrapper.WrapperPath);
             if (wrappedDir != null) {
-              wrapperIniPath = Path.Combine(wrappedDir, RdpWrapIniName);
+              wrapperIniPath = Path.Combine(wrappedDir, Wrapper.RdpWrapIniName);
               checkSupported = File.Exists(wrapperIniPath);
             }
           }
@@ -376,7 +264,7 @@ namespace rdpWrapper {
           break;
       }
 
-      switch (serviceHelper.GetServiceState(RdpServiceName)) {
+      switch (wrapper.GetServiceState()) {
         case ServiceControllerStatus.Stopped:
           lblServiceStateValue.Text = "Stopped";
           lblServiceStateValue.ForeColor = Theme.Current.StatusErrorColor;
@@ -420,23 +308,23 @@ namespace rdpWrapper {
         lblListenerStateValue.ForeColor = Theme.Current.StatusErrorColor;
       }
 
-      if (string.IsNullOrEmpty(wrapperPath) || !File.Exists(wrapperPath)) {
+      if (string.IsNullOrEmpty(wrapper.WrapperPath) || !File.Exists(wrapper.WrapperPath)) {
         lblWrapperVersion.Text = "N/A";
         lblWrapperVersion.ForeColor = Theme.Current.StatusErrorColor;
       }
       else {
-        var versionInfo = FileVersionInfo.GetVersionInfo(wrapperPath);
-        lblWrapperVersion.Text = GetVersionString(versionInfo);
+        var versionInfo = FileVersionInfo.GetVersionInfo(wrapper.WrapperPath);
+        lblWrapperVersion.Text = Wrapper.GetVersionString(versionInfo);
         lblWrapperVersion.ForeColor = Theme.Current.ForegroundColor;
       }
 
-      if (!File.Exists(termSrvFile)) {
+      if (!File.Exists(wrapper.TermSrvFile)) {
         txtServiceVersion.Text = "N/A";
         txtServiceVersion.ForeColor = Theme.Current.StatusErrorColor;
       }
       else {
-        var versionInfo = FileVersionInfo.GetVersionInfo(termSrvFile);
-        txtServiceVersion.Text = GetVersionString(versionInfo);
+        var versionInfo = FileVersionInfo.GetVersionInfo(wrapper.TermSrvFile);
+        txtServiceVersion.Text = Wrapper.GetVersionString(versionInfo);
         txtServiceVersion.ForeColor = Theme.Current.ForegroundColor;
 
         btnGenerate.Enabled = wrapperInstalled == 1;
@@ -451,7 +339,7 @@ namespace rdpWrapper {
             var lastModified = File.GetLastWriteTime(wrapperIniLastPath);
             if (lastModified > wrapperIniLastChecked) {
               var iniContent = File.ReadAllText(wrapperIniLastPath);
-              wrapperIniLastSupported = iniContent.Contains("[" + GetVersionString(versionInfo) + "]");
+              wrapperIniLastSupported = iniContent.Contains("[" + Wrapper.GetVersionString(versionInfo) + "]");
               wrapperIniLastChecked = lastModified;
             }
             if (wrapperIniLastSupported) {
@@ -466,82 +354,6 @@ namespace rdpWrapper {
       }
     }
 
-    private void GenerateIniFile(string destFilePath, bool executeCleanup = true) {
-
-      string iniFile = null;
-      string offsetFinder = null;
-      string zydis = null;
-      try {
-        logger.Log("Generating config...");
-        var workingDir = Path.GetTempPath();
-        iniFile = ExtractResourceFile(RdpWrapIniName, workingDir, true);
-        offsetFinder = ExtractResourceFile("RDPWrapOffsetFinder.exe", workingDir);
-        zydis = ExtractResourceFile("Zydis.dll", workingDir);
-        var p = StartProcess("cmd", $"/c \"{offsetFinder}\" >> {RdpWrapIniName} & exit", workingDir);
-        p.WaitForExit();
-        logger.Log(" Done", Logger.StateKind.Info, false);
-      }
-      catch (Exception ex) {
-        var message = "Failed to generate config: " + ex.Message;
-        logger.Log(message, Logger.StateKind.Error);
-        MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
-      }
-      finally {
-        if (executeCleanup) {
-          SafeDeleteFile(offsetFinder);
-          SafeDeleteFile(zydis);
-        }
-      }
-
-      if (string.IsNullOrEmpty(iniFile) || !File.Exists(iniFile)) return;
-      
-      try {
-        serviceHelper.StopService(RdpServiceName, TimeSpan.FromSeconds(10));
-
-        SafeDeleteFile(destFilePath);
-        File.Move(iniFile, destFilePath);
-
-        serviceHelper.StartService(RdpServiceName, TimeSpan.FromSeconds(10));
-      }
-      catch (Exception ex) {
-        var message = "Failed to update config: " + ex.Message;
-        logger.Log(message, Logger.StateKind.Error);
-        MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
-      }
-    }
-
-    private string ExtractResourceFile(string resourceName, string path, bool deleteExisting = false) {
-      var filePath = Path.Combine(path, resourceName);
-      if (File.Exists(filePath)) {
-        if (!deleteExisting) {
-          return filePath; //todo: delete
-        }
-        SafeDeleteFile(filePath);
-      }
-      try {
-        var type = GetType();
-        var scriptsPath = $"{type.Namespace}.externals.{resourceName}";
-        using var stream = type.Assembly.GetManifestResourceStream(scriptsPath);
-        using var fileStream = File.Create(filePath);
-        stream?.Seek(0, SeekOrigin.Begin);
-        stream?.CopyTo(fileStream);
-        return filePath;
-      }
-      catch (Exception ex) {
-        logger.Log(ex.Message, Logger.StateKind.Error);
-        return null;
-      }
-    }
-
-    private void SafeDeleteFile(string filePath) {
-      try {
-        if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) File.Delete(filePath);
-      }
-      catch (Exception ex) {
-        logger.Log(ex.Message, Logger.StateKind.Error);
-      }
-    }
-
     private void btnTest_Click(object sender, EventArgs e) {
       Process.Start("mstsc.exe", $"/v:127.0.0.2:{oldPort}");
     }
@@ -549,7 +361,7 @@ namespace rdpWrapper {
     private void btnGenerate_Click(object sender, EventArgs e) {
       try {
         btnGenerate.Enabled = false;
-        GenerateIniFile(wrapperIniLastPath);
+        wrapper.GenerateIniFile(wrapperIniLastPath);
       }
       finally {
         btnGenerate.Enabled = true;
@@ -582,42 +394,11 @@ namespace rdpWrapper {
       Application.DoEvents();
     }
 
-    private static void AddDirectorySecurity(string fileName, string[] sids, FileSystemRights rights, AccessControlType controlType) {
-      var dInfo = new DirectoryInfo(fileName);
-      var dSecurity = dInfo.GetAccessControl();
-      foreach(var sid in sids) {
-        var sIdentifier = new SecurityIdentifier(sid);
-        dSecurity.AddAccessRule(new FileSystemAccessRule(sIdentifier, rights, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, controlType));
-      }
-      dInfo.SetAccessControl(dSecurity);
-    }
-
     private void btnInstall_Click(object sender, EventArgs e) {
 
       try {
         btnInstall.Enabled = false;
-        Directory.CreateDirectory(wrapperFolderPath);
-        logger.Log("Folder created: " + wrapperFolderPath);
-
-        AddDirectorySecurity(wrapperFolderPath, [
-          "S-1-5-18", // Local System account
-          "S-1-5-6", // Service group
-          "S-1-5-32-545", // SID for "Users"
-        ] , FileSystemRights.FullControl, AccessControlType.Allow);
-
-        var rdpWrap = ExtractResourceFile(RdpWrapDllName, wrapperFolderPath);
-        logger.Log("Extracted rdpWrap.dll -> " + rdpWrap);
-
-        logger.Log("Configuring service library...");
-        using var reg = Registry.LocalMachine.OpenSubKey(RegTermServiceKey + "\\Parameters", writable: true);
-        if (reg == null) {
-          logger.Log($"OpenKey error (code {Marshal.GetLastWin32Error()}).", Logger.StateKind.Error);
-          return;
-        }
-        reg.SetValue("ServiceDll", rdpWrap, RegistryValueKind.ExpandString);
-        logger.Log(" Done", Logger.StateKind.Info, false);
-
-        GenerateIniFile(Path.Combine(wrapperFolderPath, RdpWrapIniName));
+        wrapper.Install();
 
         //todo: Thread.Sleep(1000); 
         cbxAllowTSConnections.Checked = true;
@@ -636,25 +417,8 @@ namespace rdpWrapper {
     private void btnUninstall_Click(object sender, EventArgs e) {
       try {
         btnUninstall.Enabled = false;
-        logger.Log("Resetting service library...");
-        using var reg = Registry.LocalMachine.OpenSubKey(RegTermServiceKey + "\\Parameters", writable: true);
-        if (reg == null) {
-          logger.Log($"OpenKey error (code {Marshal.GetLastWin32Error()}).", Logger.StateKind.Error);
-          return;
-        }
-        reg.SetValue("ServiceDll", @"%SystemRoot%\System32\termsrv.dll", RegistryValueKind.ExpandString);
-        logger.Log(" Done", Logger.StateKind.Info, false);
-
-        var serviceState = serviceHelper.GetServiceState(RdpServiceName); 
-        if (serviceState.HasValue && serviceState == ServiceControllerStatus.Running)
-          serviceHelper.StopService(RdpServiceName, TimeSpan.FromSeconds(10));
-
-        logger.Log("Removed folder: " + wrapperFolderPath);
-        Directory.Delete(wrapperFolderPath, true);
-
-        if (serviceState.HasValue)
-          serviceHelper.StartService(RdpServiceName, TimeSpan.FromSeconds(10));
-
+        wrapper.Uninstall();
+        
         //cbxAllowTSConnections.Checked = false;
         //btnApply.PerformClick();
       }
