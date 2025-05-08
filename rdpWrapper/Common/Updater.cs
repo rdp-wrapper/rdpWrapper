@@ -51,7 +51,7 @@ namespace sergiye.Common {
       CurrentFileLocation = asm.Location;
       selfFileName = Path.GetFileName(CurrentFileLocation);
       ServicePointManager.Expect100Continue = false;
-      ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+      ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
       ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
     }
 
@@ -80,9 +80,9 @@ namespace sergiye.Common {
         return CheckForUpdatesInternal(silent, jsonString);
       }
       catch (Exception ex) {
+        Console.WriteLine($"Error checking for a new version.\n{ex.Message}");
         if (!silent)
 #if NOWINFORMS
-          Console.WriteLine($"Error checking for a new version.\n{ex.Message}");
 #else
           MessageBox.Show($"Error checking for a new version.\n{ex.Message}", ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
 #endif
@@ -104,9 +104,9 @@ namespace sergiye.Common {
         return CheckForUpdatesInternal(silent, jsonString);
       }
       catch (Exception ex) {
+        Console.WriteLine($"Error checking for a new version.\n{ex.Message}");
         if (!silent)
 #if NOWINFORMS
-          Console.WriteLine($"Error checking for a new version.\n{ex.Message}");
 #else
           MessageBox.Show($"Error checking for a new version.\n{ex.Message}", ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
 #endif
@@ -124,9 +124,9 @@ namespace sergiye.Common {
       var asset = lastRelease.Assets.FirstOrDefault(a => a.Name == selfFileName);
       var newVersionUrl = asset?.Browser_download_url;
       if (string.IsNullOrEmpty(newVersionUrl)) {
+        Console.WriteLine($"Your version is: {CurrentVersion}; Latest released version is: {newVersion}; No assets found to update.");
         if (!silent)
 #if NOWINFORMS
-          Console.WriteLine($"Your version is: {CurrentVersion}\nLatest released version is: {newVersion}\nNo assets found to update.");
 #else
           MessageBox.Show($"Your version is: {CurrentVersion}\nLatest released version is: {newVersion}\nNo assets found to update.", ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
 #endif
@@ -134,17 +134,17 @@ namespace sergiye.Common {
       }
 
       if (string.Compare(CurrentVersion, newVersion, StringComparison.Ordinal) >= 0) {
+        Console.WriteLine($"Your version: {CurrentVersion}; Last release: {newVersion}; No need to update.");
         if (!silent)
 #if NOWINFORMS
-          Console.WriteLine($"Your version: {CurrentVersion}\nLast release: {newVersion}\nNo need to update.");
 #else
           MessageBox.Show($"Your version: {CurrentVersion}\nLast release: {newVersion}\nNo need to update.", ApplicationName, MessageBoxButtons.OK,
             MessageBoxIcon.Information);
 #endif
         return true;
       }
-#if NOWINFORMS
       Console.WriteLine($"New version found: {newVersion}, app will be updated after close.");
+#if NOWINFORMS
 #else
       if (MessageBox.Show($"Your version: {CurrentVersion}\nLast release: {newVersion}\nDownload this update?",
         ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) {
@@ -162,9 +162,9 @@ namespace sergiye.Common {
         return true;
       }
       catch (Exception ex) {
+        Console.WriteLine($"Error downloading new version\n{ex.Message}");
         if (!silent)
 #if NOWINFORMS
-          Console.WriteLine($"Error downloading new version\n{ex.Message}");
 #else
           MessageBox.Show($"Error downloading new version\n{ex.Message}", ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
 #endif
