@@ -655,8 +655,8 @@ namespace rdpWrapper {
         if (serviceState.HasValue)
           serviceHelper.StartService(RdpServiceName, TimeSpan.FromSeconds(10));
 
-        cbxAllowTSConnections.Checked = false;
-        btnApply.PerformClick();
+        //cbxAllowTSConnections.Checked = false;
+        //btnApply.PerformClick();
       }
       catch (Exception ex) {
         var message = "Failed to Install: " + ex.Message;
