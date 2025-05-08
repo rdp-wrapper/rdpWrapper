@@ -86,6 +86,10 @@ namespace rdpWrapper {
 
       Load += MainFormLoad;
 
+      Theme.SetAutoTheme();
+      Theme.Current.Apply(this);
+      btnTheme.Text = Theme.Current.DisplayName;
+
       termSrvFile = Path.Combine(Environment.SystemDirectory, TermSrvName);
       //string programFilesX86 = Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%");
       wrapperFolderPath = Path.Combine(Environment.ExpandEnvironmentVariables("%ProgramW6432%"), "RDP Wrapper");
@@ -184,6 +188,17 @@ namespace rdpWrapper {
       if (btnApply.Enabled && MessageBox.Show("Settings are not saved. Do you want to exit?", Updater.ApplicationTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No) {
         e.Cancel = true;
       }
+    }
+
+    private void btnTheme_Click(object sender, EventArgs e) {
+
+      if (Theme.Current.DisplayName == "Light") {
+        Theme.Current = new DarkTheme();
+      }
+      else {
+        Theme.Current = new LightTheme();
+      }
+      btnTheme.Text = Theme.Current.DisplayName;
     }
 
     private void btnApply_Click(object sender, EventArgs e) {
@@ -325,19 +340,19 @@ namespace rdpWrapper {
       switch (wrapperInstalled) {
         case -1:
           lblWrapperStateValue.Text = "Unknown";
-          lblWrapperStateValue.ForeColor = Color.Gray;
+          lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
           btnInstall.Visible = false;
           btnUninstall.Visible = false;
           break;
         case 0:
           lblWrapperStateValue.Text = "Not installed";
-          lblWrapperStateValue.ForeColor = Color.Gray;
+          lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
           btnInstall.Visible = true;
           btnUninstall.Visible = false;
           break;
         case 1:
           lblWrapperStateValue.Text = "Installed";
-          lblWrapperStateValue.ForeColor = Color.DarkGreen;
+          lblWrapperStateValue.ForeColor = Theme.Current.StatusOkColor;
           string wrapperIniPath = null;
           if (!string.IsNullOrEmpty(wrapperPath)) {
             var wrappedDir = Path.GetDirectoryName(wrapperPath);
@@ -355,7 +370,7 @@ namespace rdpWrapper {
           break;
         case 2:
           lblWrapperStateValue.Text = "3rd-party";
-          lblWrapperStateValue.ForeColor = Color.Red;
+          lblWrapperStateValue.ForeColor = Theme.Current.StatusErrorColor;
           btnInstall.Visible = false;
           btnUninstall.Visible = false;
           break;
@@ -364,98 +379,91 @@ namespace rdpWrapper {
       switch (serviceHelper.GetServiceState(RdpServiceName)) {
         case ServiceControllerStatus.Stopped:
           lblServiceStateValue.Text = "Stopped";
-          lblServiceStateValue.ForeColor = Color.Red;
+          lblServiceStateValue.ForeColor = Theme.Current.StatusErrorColor;
           break;
         case ServiceControllerStatus.StartPending:
           lblServiceStateValue.Text = "Starting..";
-          lblServiceStateValue.ForeColor = ForeColor;
+          lblServiceStateValue.ForeColor = Theme.Current.ForegroundColor;
           break;
         case ServiceControllerStatus.StopPending:
           lblServiceStateValue.Text = "Stopping...";
-          lblServiceStateValue.ForeColor = ForeColor;
+          lblServiceStateValue.ForeColor = Theme.Current.ForegroundColor;
           break;
         case ServiceControllerStatus.Running:
           lblServiceStateValue.Text = "Running";
-          lblServiceStateValue.ForeColor = Color.DarkGreen;
+          lblServiceStateValue.ForeColor = Theme.Current.StatusOkColor;
           break;
         case ServiceControllerStatus.ContinuePending:
           lblServiceStateValue.Text = "Resuming...";
-          lblServiceStateValue.ForeColor = ForeColor;
+          lblServiceStateValue.ForeColor = Theme.Current.ForegroundColor;
           break;
         case ServiceControllerStatus.PausePending:
           lblServiceStateValue.Text = "Suspending...";
-          lblServiceStateValue.ForeColor = ForeColor;
+          lblServiceStateValue.ForeColor = Theme.Current.ForegroundColor;
           break;
         case ServiceControllerStatus.Paused:
           lblServiceStateValue.Text = "Suspended";
-          lblServiceStateValue.ForeColor = ForeColor;
+          lblServiceStateValue.ForeColor = Theme.Current.ForegroundColor;
           break;
         default:
           lblServiceStateValue.Text = "Unknown";
-          lblServiceStateValue.ForeColor = ForeColor;
+          lblServiceStateValue.ForeColor = Theme.Current.ForegroundColor;
           break;
       }
 
       if (WinStationHelper.IsListenerWorking()){
         lblListenerStateValue.Text = "Listening";
-        lblListenerStateValue.ForeColor = Color.DarkGreen;
+        lblListenerStateValue.ForeColor = Theme.Current.StatusOkColor;
       }
       else {
         lblListenerStateValue.Text = "Not listening";
-        lblListenerStateValue.ForeColor = Color.Red;
+        lblListenerStateValue.ForeColor = Theme.Current.StatusErrorColor;
       }
 
       if (string.IsNullOrEmpty(wrapperPath) || !File.Exists(wrapperPath)) {
         lblWrapperVersion.Text = "N/A";
-        lblWrapperVersion.ForeColor = Color.Red;
+        lblWrapperVersion.ForeColor = Theme.Current.StatusErrorColor;
       }
       else {
         var versionInfo = FileVersionInfo.GetVersionInfo(wrapperPath);
         lblWrapperVersion.Text = GetVersionString(versionInfo);
-        lblWrapperVersion.ForeColor = ForeColor;
+        lblWrapperVersion.ForeColor = Theme.Current.ForegroundColor;
       }
 
       if (!File.Exists(termSrvFile)) {
         txtServiceVersion.Text = "N/A";
-        txtServiceVersion.ForeColor = Color.Red;
+        txtServiceVersion.ForeColor = Theme.Current.StatusErrorColor;
       }
       else {
         var versionInfo = FileVersionInfo.GetVersionInfo(termSrvFile);
         txtServiceVersion.Text = GetVersionString(versionInfo);
-        txtServiceVersion.ForeColor = ForeColor;
+        txtServiceVersion.ForeColor = Theme.Current.ForegroundColor;
 
+        btnGenerate.Enabled = wrapperInstalled == 1;
         lblSupported.Visible = checkSupported;
         if (checkSupported) {
-          UpdateSupportedState(versionInfo);
+          if (versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 0 ||
+              versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 1) {
+            lblSupported.Text = "[supported partially]";
+            lblSupported.ForeColor = Theme.Current.StatusInfoColor;
+          }
+          else {
+            var lastModified = File.GetLastWriteTime(wrapperIniLastPath);
+            if (lastModified > wrapperIniLastChecked) {
+              var iniContent = File.ReadAllText(wrapperIniLastPath);
+              wrapperIniLastSupported = iniContent.Contains("[" + GetVersionString(versionInfo) + "]");
+              wrapperIniLastChecked = lastModified;
+            }
+            if (wrapperIniLastSupported) {
+              lblSupported.Text = "[fully supported]";
+              lblSupported.ForeColor = Theme.Current.StatusOkColor;
+              return;
+            }
+          }
+          lblSupported.Text = "[not supported]";
+          lblSupported.ForeColor = Theme.Current.StatusErrorColor;
         }
       }
-    }
-
-    private void UpdateSupportedState(FileVersionInfo versionInfo) {
-
-      if (versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 0 ||
-          versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 1) {
-        lblSupported.Text = "[supported partially]";
-        lblSupported.ForeColor = Color.Olive;
-        btnGenerate.Visible = false;
-      }
-      else {
-        var lastModified = File.GetLastWriteTime(wrapperIniLastPath);
-        if (lastModified > wrapperIniLastChecked) {
-          var iniContent = File.ReadAllText(wrapperIniLastPath);
-          wrapperIniLastSupported = iniContent.Contains("[" + GetVersionString(versionInfo) + "]");
-          wrapperIniLastChecked = lastModified;
-        }
-        if (wrapperIniLastSupported) {
-          lblSupported.Text = "[fully supported]";
-          lblSupported.ForeColor = Color.DarkGreen;
-          btnGenerate.Visible = false;
-          return;
-        }
-      }
-      lblSupported.Text = "[not supported]";
-      lblSupported.ForeColor = Color.Red;
-      btnGenerate.Visible = true;
     }
 
     private void GenerateIniFile(string destFilePath, bool executeCleanup = true) {
@@ -555,16 +563,16 @@ namespace rdpWrapper {
       }
 
       if (newLine)
-        txtLog.AppendLine($"{DateTime.Now:T} - ", txtLog.ForeColor);
+        txtLog.AppendLine($"{DateTime.Now:T} - ", Theme.Current.ForegroundColor);
       switch (state) {
         case Logger.StateKind.Error:
-          txtLog.AppendLine(message, Color.Red, false);
+          txtLog.AppendLine(message, Theme.Current.StatusErrorColor, false);
           break;
         case Logger.StateKind.Info:
-          txtLog.AppendLine(message, Color.Blue, false);
+          txtLog.AppendLine(message, Theme.Current.StatusOkColor, false);
           break;
         default:
-          txtLog.AppendLine(message, txtLog.ForeColor, false);
+          txtLog.AppendLine(message, Theme.Current.ForegroundColor, false);
           break;
       }
 

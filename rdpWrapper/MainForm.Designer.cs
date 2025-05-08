@@ -29,6 +29,7 @@ namespace rdpWrapper {
       this.lRDPPort = new System.Windows.Forms.Label();
       this.cbxHonorLegacy = new System.Windows.Forms.CheckBox();
       this.panActions = new System.Windows.Forms.Panel();
+      this.btnTheme = new System.Windows.Forms.Button();
       this.btnTest = new System.Windows.Forms.Button();
       this.btnRestartService = new System.Windows.Forms.Button();
       this.gbxGeneralSettings = new System.Windows.Forms.GroupBox();
@@ -58,7 +59,7 @@ namespace rdpWrapper {
       // 
       this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
       this.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-      this.btnClose.Location = new System.Drawing.Point(299, 4);
+      this.btnClose.Location = new System.Drawing.Point(300, 4);
       this.btnClose.Margin = new System.Windows.Forms.Padding(2);
       this.btnClose.Name = "btnClose";
       this.btnClose.Size = new System.Drawing.Size(67, 23);
@@ -69,7 +70,7 @@ namespace rdpWrapper {
       // btnApply
       // 
       this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.btnApply.Location = new System.Drawing.Point(221, 4);
+      this.btnApply.Location = new System.Drawing.Point(222, 4);
       this.btnApply.Margin = new System.Windows.Forms.Padding(2);
       this.btnApply.Name = "btnApply";
       this.btnApply.Size = new System.Drawing.Size(67, 23);
@@ -118,7 +119,7 @@ namespace rdpWrapper {
       this.rgNLAOptions.Location = new System.Drawing.Point(183, 57);
       this.rgNLAOptions.Margin = new System.Windows.Forms.Padding(2);
       this.rgNLAOptions.Name = "rgNLAOptions";
-      this.rgNLAOptions.Size = new System.Drawing.Size(184, 21);
+      this.rgNLAOptions.Size = new System.Drawing.Size(185, 21);
       this.rgNLAOptions.TabIndex = 7;
       this.rgNLAOptions.SelectedIndexChanged += new System.EventHandler(this.OnChanged);
       // 
@@ -130,14 +131,14 @@ namespace rdpWrapper {
       this.rgShadowOptions.Location = new System.Drawing.Point(183, 97);
       this.rgShadowOptions.Margin = new System.Windows.Forms.Padding(2);
       this.rgShadowOptions.Name = "rgShadowOptions";
-      this.rgShadowOptions.Size = new System.Drawing.Size(184, 21);
+      this.rgShadowOptions.Size = new System.Drawing.Size(185, 21);
       this.rgShadowOptions.TabIndex = 9;
       this.rgShadowOptions.SelectedIndexChanged += new System.EventHandler(this.OnChanged);
       // 
       // seRDPPort
       // 
       this.seRDPPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.seRDPPort.Location = new System.Drawing.Point(285, 21);
+      this.seRDPPort.Location = new System.Drawing.Point(286, 21);
       this.seRDPPort.Margin = new System.Windows.Forms.Padding(2);
       this.seRDPPort.Maximum = new decimal(new int[] {
             65535,
@@ -181,15 +182,26 @@ namespace rdpWrapper {
       // 
       // panActions
       // 
+      this.panActions.Controls.Add(this.btnTheme);
       this.panActions.Controls.Add(this.btnTest);
       this.panActions.Controls.Add(this.btnClose);
       this.panActions.Controls.Add(this.btnApply);
       this.panActions.Dock = System.Windows.Forms.DockStyle.Bottom;
-      this.panActions.Location = new System.Drawing.Point(0, 267);
+      this.panActions.Location = new System.Drawing.Point(0, 266);
       this.panActions.Margin = new System.Windows.Forms.Padding(2);
       this.panActions.Name = "panActions";
-      this.panActions.Size = new System.Drawing.Size(373, 30);
+      this.panActions.Size = new System.Drawing.Size(374, 30);
       this.panActions.TabIndex = 3;
+      // 
+      // btnTheme
+      // 
+      this.btnTheme.Location = new System.Drawing.Point(77, 4);
+      this.btnTheme.Margin = new System.Windows.Forms.Padding(2);
+      this.btnTheme.Name = "btnTheme";
+      this.btnTheme.Size = new System.Drawing.Size(67, 23);
+      this.btnTheme.TabIndex = 3;
+      this.btnTheme.Text = "Theme";
+      this.btnTheme.Click += new System.EventHandler(this.btnTheme_Click);
       // 
       // btnTest
       // 
@@ -204,7 +216,7 @@ namespace rdpWrapper {
       // btnRestartService
       // 
       this.btnRestartService.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.btnRestartService.Location = new System.Drawing.Point(298, 15);
+      this.btnRestartService.Location = new System.Drawing.Point(299, 15);
       this.btnRestartService.Margin = new System.Windows.Forms.Padding(2);
       this.btnRestartService.Name = "btnRestartService";
       this.btnRestartService.Size = new System.Drawing.Size(67, 19);
@@ -229,7 +241,7 @@ namespace rdpWrapper {
       this.gbxGeneralSettings.Margin = new System.Windows.Forms.Padding(2);
       this.gbxGeneralSettings.Name = "gbxGeneralSettings";
       this.gbxGeneralSettings.Padding = new System.Windows.Forms.Padding(2);
-      this.gbxGeneralSettings.Size = new System.Drawing.Size(373, 126);
+      this.gbxGeneralSettings.Size = new System.Drawing.Size(374, 126);
       this.gbxGeneralSettings.TabIndex = 2;
       this.gbxGeneralSettings.TabStop = false;
       this.gbxGeneralSettings.Text = "General settings";
@@ -274,7 +286,7 @@ namespace rdpWrapper {
       this.gbxStatus.Margin = new System.Windows.Forms.Padding(2);
       this.gbxStatus.Name = "gbxStatus";
       this.gbxStatus.Padding = new System.Windows.Forms.Padding(2);
-      this.gbxStatus.Size = new System.Drawing.Size(373, 86);
+      this.gbxStatus.Size = new System.Drawing.Size(374, 86);
       this.gbxStatus.TabIndex = 1;
       this.gbxStatus.TabStop = false;
       this.gbxStatus.Text = "Diagnostics";
@@ -282,7 +294,7 @@ namespace rdpWrapper {
       // btnUninstall
       // 
       this.btnUninstall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.btnUninstall.Location = new System.Drawing.Point(298, 38);
+      this.btnUninstall.Location = new System.Drawing.Point(299, 38);
       this.btnUninstall.Margin = new System.Windows.Forms.Padding(2);
       this.btnUninstall.Name = "btnUninstall";
       this.btnUninstall.Size = new System.Drawing.Size(67, 19);
@@ -294,7 +306,7 @@ namespace rdpWrapper {
       // btnInstall
       // 
       this.btnInstall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.btnInstall.Location = new System.Drawing.Point(298, 38);
+      this.btnInstall.Location = new System.Drawing.Point(299, 38);
       this.btnInstall.Margin = new System.Windows.Forms.Padding(2);
       this.btnInstall.Name = "btnInstall";
       this.btnInstall.Size = new System.Drawing.Size(67, 19);
@@ -306,13 +318,12 @@ namespace rdpWrapper {
       // btnGenerate
       // 
       this.btnGenerate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.btnGenerate.Location = new System.Drawing.Point(298, 61);
+      this.btnGenerate.Location = new System.Drawing.Point(299, 61);
       this.btnGenerate.Margin = new System.Windows.Forms.Padding(2);
       this.btnGenerate.Name = "btnGenerate";
       this.btnGenerate.Size = new System.Drawing.Size(67, 19);
       this.btnGenerate.TabIndex = 2;
       this.btnGenerate.Text = "Generate";
-      this.btnGenerate.Visible = false;
       this.btnGenerate.Click += new System.EventHandler(this.btnGenerate_Click);
       // 
       // txtServiceVersion
@@ -325,7 +336,7 @@ namespace rdpWrapper {
       this.txtServiceVersion.Margin = new System.Windows.Forms.Padding(2);
       this.txtServiceVersion.Name = "txtServiceVersion";
       this.txtServiceVersion.ReadOnly = true;
-      this.txtServiceVersion.Size = new System.Drawing.Size(111, 13);
+      this.txtServiceVersion.Size = new System.Drawing.Size(112, 13);
       this.txtServiceVersion.TabIndex = 3;
       this.txtServiceVersion.TabStop = false;
       // 
@@ -425,7 +436,7 @@ namespace rdpWrapper {
       this.txtLog.Margin = new System.Windows.Forms.Padding(2);
       this.txtLog.Name = "txtLog";
       this.txtLog.ReadOnly = true;
-      this.txtLog.Size = new System.Drawing.Size(373, 55);
+      this.txtLog.Size = new System.Drawing.Size(374, 54);
       this.txtLog.TabIndex = 0;
       this.txtLog.Text = "";
       // 
@@ -435,15 +446,14 @@ namespace rdpWrapper {
       this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
       this.CancelButton = this.btnClose;
-      this.ClientSize = new System.Drawing.Size(373, 297);
+      this.ClientSize = new System.Drawing.Size(374, 296);
       this.Controls.Add(this.txtLog);
       this.Controls.Add(this.panActions);
       this.Controls.Add(this.gbxGeneralSettings);
       this.Controls.Add(this.gbxStatus);
-      this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
       this.Margin = new System.Windows.Forms.Padding(2);
-      this.MaximizeBox = false;
-      this.MinimizeBox = false;
+      this.MaximumSize = new System.Drawing.Size(390, 2000);
+      this.MinimumSize = new System.Drawing.Size(390, 335);
       this.Name = "MainForm";
       this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
       this.Text = "RDP Wrapper";
@@ -490,5 +500,6 @@ namespace rdpWrapper {
     private rdpWrapper.SimplTextBox txtLog;
     private Button btnInstall;
     private Button btnUninstall;
+    private Button btnTheme;
   }
 }
