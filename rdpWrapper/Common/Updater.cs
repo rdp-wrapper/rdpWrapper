@@ -147,7 +147,7 @@ namespace sergiye.Common {
       Console.WriteLine($"New version found: {newVersion}, app will be updated after close.");
 #else
       if (MessageBox.Show($"Your version: {CurrentVersion}\nLast release: {newVersion}\nDownload this update?",
-        ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) {
+        ApplicationName, MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK) {
         return true;
       }
 #endif
