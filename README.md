@@ -12,7 +12,10 @@
 This tool is inspired by the [stascorp's rdpwrap project](https://github.com/stascorp/rdpwrap).
 However it is written in pure .NET instead of Pascal/Delphi.
 The main idea was to create small and portable single-file application with all required functionality.
-And yes, it can auto-generate offsets for new/updated Windows versions - thanks to the [llccd's RDPWrapOffsetFinder project](https://github.com/llccd/RDPWrapOffsetFinder).
+
+And yes, it can auto-generate offsets for new/updated Windows versions - thanks to the llccd's projects:
+ - [TermWrap](https://github.com/llccd/TermWrap)
+ - [RDPWrapOffsetFinder](https://github.com/llccd/RDPWrapOffsetFinder).
 
 RDP Wrapper works as a layer between Service Control Manager and Terminal Services, so the original termsrv.dll file remains untouched. Also this method is very strong against Windows Update.
 
