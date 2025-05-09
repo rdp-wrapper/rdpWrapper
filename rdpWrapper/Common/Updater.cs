@@ -44,7 +44,7 @@ namespace sergiye.Common {
 
     static Updater() {
       var asm = Assembly.GetExecutingAssembly(); //typeof(Updater).Assembly
-      ApplicationName = asm.GetName().Name;
+      ApplicationName = GetAttribute<AssemblyProductAttribute>(asm)?.Product;
       ApplicationTitle = GetAttribute<AssemblyTitleAttribute>(asm)?.Title;
       ApplicationCompany = GetAttribute<AssemblyCompanyAttribute>(asm)?.Company;
       CurrentVersion = asm.GetName().Version.ToString(3); //Application.ProductVersion;

@@ -71,7 +71,7 @@ namespace rdpWrapper {
       var timer = new Timer();
       timer.Tick += async (_, _) => {
         timer.Enabled = false;
-        timer.Enabled = !await Updater.CheckForUpdatesAsync(true).ConfigureAwait(false);
+        timer.Enabled = !await Updater.CheckForUpdatesAsync(true);
       };
       timer.Interval = 3000;
       timer.Enabled = true;
@@ -336,7 +336,11 @@ namespace rdpWrapper {
         txtServiceVersion.Text = Wrapper.GetVersionString(versionInfo);
         txtServiceVersion.ForeColor = Theme.Current.ForegroundColor;
 
+#if LIGHTVERSION
+        btnGenerate.Visible = false;
+#else
         btnGenerate.Visible = wrapperInstalled == WrapperInstalledState.RdpWrap;
+#endif
         lblSupported.Visible = checkSupported is true;
         if (checkSupported is true) {
           if (versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 0 ||
