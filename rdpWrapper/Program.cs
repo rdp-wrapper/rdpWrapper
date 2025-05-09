@@ -1,5 +1,7 @@
-﻿using sergiye.Common;
+﻿using Microsoft.Win32;
+using sergiye.Common;
 using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace rdpWrapper {
@@ -15,6 +17,15 @@ namespace rdpWrapper {
 
       Crasher.Listen();
 
+      bool isX86Installed = IsVcRedistInstalled("x86");
+      bool isX64Installed = Environment.Is64BitOperatingSystem && IsVcRedistInstalled("x64");
+      if (!isX86Installed || !isX64Installed) {
+        if (MessageBox.Show("Microsoft Visual C++ 2015-2022 Redistributable is not installed.\nWould you like to download it now?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
+          Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
+        }
+        Environment.Exit(1);
+      }
+
       Application.EnableVisualStyles();
       Application.SetCompatibleTextRenderingDefault(false);
       using var form = new MainForm();
@@ -22,6 +33,16 @@ namespace rdpWrapper {
         Application.Exit();
       };
       Application.Run(form);
+    }
+
+    private static bool IsVcRedistInstalled(string arch) {
+      string registryKey = @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\" + arch;
+      // for 64-bit OS, check both 32-bit and 64-bit registry views
+      var view = (arch == "x64") ? RegistryView.Registry64 : RegistryView.Registry32;
+      using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view))
+      using (var key = baseKey.OpenSubKey(registryKey)) {
+        return key != null && key.GetValue("Installed") is int installed && installed == 1;
+      }
     }
   }
 }
