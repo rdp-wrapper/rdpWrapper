@@ -17,11 +17,12 @@ namespace rdpWrapper {
 
       Crasher.Listen();
 
-      bool isX86Installed = IsVcRedistInstalled("x86");
-      bool isX64Installed = Environment.Is64BitOperatingSystem && IsVcRedistInstalled("x64");
-      if (!isX86Installed || !isX64Installed) {
+      if (!IsVcRedistInstalled("x86") || Environment.Is64BitOperatingSystem && !IsVcRedistInstalled("x64")) {
         if (MessageBox.Show("Microsoft Visual C++ 2015-2022 Redistributable is not installed.\nWould you like to download it now?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
-          Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
+          if (Environment.Is64BitOperatingSystem)
+            Process.Start("https://aka.ms/vs/17/release/vc_redist.x64.exe");
+          else
+            Process.Start("https://aka.ms/vs/17/release/vc_redist.x86.exe");
         }
         Environment.Exit(1);
       }
