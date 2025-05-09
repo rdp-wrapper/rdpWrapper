@@ -50,6 +50,19 @@ namespace rdpWrapper {
     internal Wrapper(Logger logger) {
       this.logger = logger;
       serviceHelper = new ServiceHelper(logger);
+
+      //WrapperFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RDP Wrapper");
+      WrapperFolderPath = Environment.Is64BitOperatingSystem
+        ? Path.Combine(Environment.ExpandEnvironmentVariables("%ProgramW6432%"), "RDP Wrapper")
+        : Path.Combine(Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%"), "RDP Wrapper");
+
+      if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess) {
+        TermSrvFile = Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Sysnative"), TermSrvName);
+      }
+      else {
+        TermSrvFile = Path.Combine(Environment.SystemDirectory, TermSrvName);
+      }
+
       ReadSettings();
     }
 
@@ -64,8 +77,8 @@ namespace rdpWrapper {
 
     internal string WrapperPath { get; private set; }
 
-    internal readonly string TermSrvFile = Path.Combine(Environment.SystemDirectory, TermSrvName);
-    internal readonly string WrapperFolderPath = Path.Combine(Environment.ExpandEnvironmentVariables("%ProgramW6432%"), "RDP Wrapper"); // programFilesX86 = Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%");
+    internal readonly string TermSrvFile;
+    internal readonly string WrapperFolderPath;
 
     private void ReadSettings() {
 
@@ -141,13 +154,16 @@ namespace rdpWrapper {
             return WrapperInstalledState.Unknown;
         }
 
-        if (!File.Exists(termServicePath))
-          return WrapperInstalledState.Unknown;
+        //if (Environment.Is64BitProcess || !Environment.Is64BitOperatingSystem) {
+        //  if (!File.Exists(termServicePath))
+        //    return WrapperInstalledState.Unknown;
+        //}
         var wrapperName = Path.GetFileName(termServicePath);
         if (TermSrvName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) 
           return WrapperInstalledState.NotInstalled;
         if (RdpWrapDllName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) {
           WrapperPath = termServicePath;
+          //WrapperFolderPath = Path.GetDirectoryName(termServicePath);
           return WrapperInstalledState.RdpWrap;
         }
         if (TermWrapDllName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) {
@@ -193,9 +209,9 @@ namespace rdpWrapper {
         var workingDir = Path.GetTempPath();
         iniFile = ExtractResourceFile(RdpWrapIniName, workingDir, true);
         offsetFinder = ExtractResourceFile("RDPWrapOffsetFinder.exe", workingDir);
-        zydis = ExtractResourceFile(ZydisDllName, workingDir);
+        zydis = ExtractResourceFile(ZydisDllName, workingDir, archPrefix: true);
         var p = StartProcess("cmd", $"/c \"{offsetFinder}\" >> {RdpWrapIniName} & exit", workingDir);
-        p.WaitForExit();
+        p.WaitForExit(); //todo: check p.ExitCode
         logger.Log(" Done", Logger.StateKind.Info, false);
       }
       catch (Exception ex) {
@@ -250,12 +266,14 @@ namespace rdpWrapper {
 
       string wrapPath;
       if (useTermWrap) {
-        wrapPath = ExtractResourceFile(TermWrapDllName, WrapperFolderPath);
+        wrapPath = ExtractResourceFile(TermWrapDllName, WrapperFolderPath, archPrefix: true);
         logger.Log("Extracted TermWrap.dll -> " + wrapPath);
-        var zydis = ExtractResourceFile(ZydisDllName, WrapperFolderPath);
+        var zydis = ExtractResourceFile(ZydisDllName, WrapperFolderPath, archPrefix: true);
         logger.Log("Extracted zydis.dll -> " + zydis);
-        var umWrap = ExtractResourceFile(UmWrapDllName, WrapperFolderPath);
-        logger.Log("Extracted umWrap.dll -> " + umWrap);
+        if (Environment.Is64BitProcess) {
+          var umWrap = ExtractResourceFile(UmWrapDllName, WrapperFolderPath, archPrefix: true);
+          logger.Log("Extracted umWrap.dll -> " + umWrap);
+        }
       }
 #if !LIGHTVERSION
       else {
@@ -312,7 +330,7 @@ namespace rdpWrapper {
     
     #region supplementary methods
     
-    private string ExtractResourceFile(string resourceName, string path, bool deleteExisting = false) {
+    private string ExtractResourceFile(string resourceName, string path, bool deleteExisting = false, bool archPrefix = false) {
       var filePath = Path.Combine(path, resourceName);
       if (File.Exists(filePath)) {
         if (!deleteExisting) {
@@ -322,7 +340,10 @@ namespace rdpWrapper {
       }
       try {
         var type = GetType();
-        var scriptsPath = $"{type.Namespace}.externals.{resourceName}";
+        
+        var scriptsPath = archPrefix 
+          ? $"{type.Namespace}.externals.{(Environment.Is64BitProcess ? "x64" : "x86")}.{resourceName}"
+          : $"{type.Namespace}.externals.{resourceName}";
         using var stream = type.Assembly.GetManifestResourceStream(scriptsPath);
         using var fileStream = File.Create(filePath);
         stream?.Seek(0, SeekOrigin.Begin);

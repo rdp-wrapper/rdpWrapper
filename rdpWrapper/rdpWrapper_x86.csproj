@@ -11,6 +11,8 @@
     <ApplicationIcon>app.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
+    <RootNamespace>rdpWrapper</RootNamespace>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <!--<DefineConstants>LIGHTVERSION</DefineConstants>-->
@@ -22,17 +24,18 @@
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <ItemGroup Condition="$(DefineConstants.Contains('LIGHTVERSION'))">
-    <None Remove="externals\x64\TermWrap.dll" />
-    <None Remove="externals\x64\UmWrap.dll" />
-    <None Remove="externals\x64\Zydis.dll" />
+    <None Remove="externals\x86\TermWrap.dll" />
+    <None Remove="externals\x86\Zydis.dll" />
   </ItemGroup>
   <ItemGroup Condition="!$(DefineConstants.Contains('LIGHTVERSION'))">
     <None Remove="externals\rdpwrap.dll" />
     <None Remove="externals\rdpwrap.ini" />
     <None Remove="externals\RDPWrapOffsetFinder.exe" />
-    <None Remove="externals\x64\Zydis.dll" />
-    <None Remove="externals\x64\TermWrap.dll" />
-    <None Remove="externals\x64\UmWrap.dll" />
+    <None Remove="externals\x86\Zydis.dll" />
+    <None Remove="externals\x86\TermWrap.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Remove="app.manifest" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="MainForm.Designer.cs">
@@ -47,17 +50,15 @@
     <Content Include="app.ico" />
   </ItemGroup>
   <ItemGroup Condition="$(DefineConstants.Contains('LIGHTVERSION'))">
-    <EmbeddedResource Include="externals\x64\TermWrap.dll" />
-    <EmbeddedResource Include="externals\x64\UmWrap.dll" />
-    <EmbeddedResource Include="externals\x64\Zydis.dll" />
+    <EmbeddedResource Include="externals\x86\TermWrap.dll" />
+    <EmbeddedResource Include="externals\x86\Zydis.dll" />
   </ItemGroup>
   <ItemGroup Condition="!$(DefineConstants.Contains('LIGHTVERSION'))">
     <EmbeddedResource Include="externals\rdpwrap.dll" />
     <EmbeddedResource Include="externals\rdpwrap.ini" />
     <EmbeddedResource Include="externals\RDPWrapOffsetFinder.exe" />
-    <EmbeddedResource Include="externals\x64\Zydis.dll" />
-    <EmbeddedResource Include="externals\x64\TermWrap.dll" />
-    <EmbeddedResource Include="externals\x64\UmWrap.dll" />
+    <EmbeddedResource Include="externals\x86\Zydis.dll" />
+    <EmbeddedResource Include="externals\x86\TermWrap.dll" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
