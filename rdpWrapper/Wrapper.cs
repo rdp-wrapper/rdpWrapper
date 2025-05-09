@@ -10,6 +10,14 @@ using sergiye.Common;
 
 namespace rdpWrapper {
 
+  internal enum WrapperInstalledState {
+    Unknown,
+    NotInstalled,
+    ThirdParty,
+    RdpWrap,
+    TermWrap,
+  }
+
   internal class Wrapper {
 
     private const string RegKey = @"SYSTEM\CurrentControlSet\Control\Terminal Server";
@@ -32,6 +40,9 @@ namespace rdpWrapper {
     internal const string RdpWrapIniName = "rdpwrap.ini";
     private const string RdpWrapDllName = "rdpwrap.dll";
     private const string TermSrvName = "termsrv.dll";
+    private const string TermWrapDllName = "TermWrap.dll";
+    private const string UmWrapDllName = "UmWrap.dll";
+    private const string ZydisDllName = "Zydis.dll";
 
     private readonly Logger logger;
     private readonly ServiceHelper serviceHelper;
@@ -55,8 +66,6 @@ namespace rdpWrapper {
 
     internal readonly string TermSrvFile = Path.Combine(Environment.SystemDirectory, TermSrvName);
     internal readonly string WrapperFolderPath = Path.Combine(Environment.ExpandEnvironmentVariables("%ProgramW6432%"), "RDP Wrapper"); // programFilesX86 = Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%");
-
-    public event Action<string> OnError;
 
     private void ReadSettings() {
 
@@ -111,37 +120,45 @@ namespace rdpWrapper {
       }
     }
  
-    internal short CheckWrapperInstalled() {
+    internal WrapperInstalledState CheckWrapperInstalled() {
       WrapperPath = string.Empty;
       try {
         using (var serviceKey = Registry.LocalMachine.OpenSubKey(RegTermServiceKey)) {
           if (serviceKey == null)
-            return -1;
+            return WrapperInstalledState.Unknown;
           var termServiceHost = serviceKey.GetValue("ImagePath") as string;
           if (string.IsNullOrWhiteSpace(termServiceHost) || !termServiceHost.ToLower().Contains("svchost.exe"))
-            return 2;
+            return WrapperInstalledState.ThirdParty;
         }
 
         string termServicePath;
         using (var paramKey = Registry.LocalMachine.OpenSubKey(RegTermServiceKey + "\\Parameters")) {
           if (paramKey == null)
-            return -1;
+            return WrapperInstalledState.Unknown;
 
           termServicePath = paramKey.GetValue("ServiceDll") as string;
           if (string.IsNullOrWhiteSpace(termServicePath))
-            return -1;
+            return WrapperInstalledState.Unknown;
         }
 
-        var lowerPath = termServicePath.ToLower();
-        if (!lowerPath.Contains(TermSrvName) && !lowerPath.Contains(RdpWrapDllName))
-          return 2;
+        if (!File.Exists(termServicePath))
+          return WrapperInstalledState.Unknown;
+        var wrapperName = Path.GetFileName(termServicePath);
+        if (TermSrvName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) 
+          return WrapperInstalledState.NotInstalled;
+        if (RdpWrapDllName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) {
+          WrapperPath = termServicePath;
+          return WrapperInstalledState.RdpWrap;
+        }
+        if (TermWrapDllName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) {
+          WrapperPath = termServicePath;
+          return WrapperInstalledState.TermWrap;
+        }
 
-        if (!lowerPath.Contains(RdpWrapDllName)) return 0;
-        WrapperPath = termServicePath;
-        return 1;
+        return WrapperInstalledState.ThirdParty;
       }
       catch {
-        return -1;
+        return WrapperInstalledState.Unknown;
       }
     }
  
@@ -162,10 +179,11 @@ namespace rdpWrapper {
     internal ServiceControllerStatus? GetServiceState() {
       return serviceHelper.GetServiceState(RdpServiceName);
     }
-    
+
     #endregion
-    
-    internal void GenerateIniFile(string destFilePath, bool executeCleanup = true) {
+
+#if !LIGHTVERSION
+    internal void GenerateIniFile(string destFilePath, bool executeCleanup = true, Action<string> onError = null) {
 
       string iniFile = null;
       string offsetFinder = null;
@@ -175,7 +193,7 @@ namespace rdpWrapper {
         var workingDir = Path.GetTempPath();
         iniFile = ExtractResourceFile(RdpWrapIniName, workingDir, true);
         offsetFinder = ExtractResourceFile("RDPWrapOffsetFinder.exe", workingDir);
-        zydis = ExtractResourceFile("Zydis.dll", workingDir);
+        zydis = ExtractResourceFile(ZydisDllName, workingDir);
         var p = StartProcess("cmd", $"/c \"{offsetFinder}\" >> {RdpWrapIniName} & exit", workingDir);
         p.WaitForExit();
         logger.Log(" Done", Logger.StateKind.Info, false);
@@ -183,7 +201,7 @@ namespace rdpWrapper {
       catch (Exception ex) {
         var message = "Failed to generate config: " + ex.Message;
         logger.Log(message, Logger.StateKind.Error);
-        OnError?.Invoke(message);
+        onError?.Invoke(message);
       }
       finally {
         if (executeCleanup) {
@@ -205,11 +223,22 @@ namespace rdpWrapper {
       catch (Exception ex) {
         var message = "Failed to update config: " + ex.Message;
         logger.Log(message, Logger.StateKind.Error);
-        OnError?.Invoke(message);
+        onError?.Invoke(message);
       }
     }
+#endif
 
+#if LIGHTVERSION
     internal void Install() {
+      const bool useTermWrap = true;
+#else
+    internal void Install(bool useTermWrap) {
+#endif
+      //Uninstall();
+      var prevServiceState = serviceHelper.GetServiceState(RdpServiceName);
+      if (prevServiceState is ServiceControllerStatus.Running)
+        serviceHelper.StopService(RdpServiceName, TimeSpan.FromSeconds(10));
+
       Directory.CreateDirectory(WrapperFolderPath);
       logger.Log("Folder created: " + WrapperFolderPath);
 
@@ -219,8 +248,21 @@ namespace rdpWrapper {
         "S-1-5-32-545", // SID for "Users"
       ] , FileSystemRights.FullControl, AccessControlType.Allow);
 
-      var rdpWrap = ExtractResourceFile(RdpWrapDllName, WrapperFolderPath);
-      logger.Log("Extracted rdpWrap.dll -> " + rdpWrap);
+      string wrapPath;
+      if (useTermWrap) {
+        wrapPath = ExtractResourceFile(TermWrapDllName, WrapperFolderPath);
+        logger.Log("Extracted TermWrap.dll -> " + wrapPath);
+        var zydis = ExtractResourceFile(ZydisDllName, WrapperFolderPath);
+        logger.Log("Extracted zydis.dll -> " + zydis);
+        var umWrap = ExtractResourceFile(UmWrapDllName, WrapperFolderPath);
+        logger.Log("Extracted umWrap.dll -> " + umWrap);
+      }
+#if !LIGHTVERSION
+      else {
+        wrapPath = ExtractResourceFile(RdpWrapDllName, WrapperFolderPath);
+        logger.Log("Extracted rdpWrap.dll -> " + wrapPath);
+      }
+#endif
 
       logger.Log("Configuring service library...");
       using var reg = Registry.LocalMachine.OpenSubKey(RegTermServiceKey + "\\Parameters", writable: true);
@@ -228,10 +270,15 @@ namespace rdpWrapper {
         logger.Log($"OpenKey error (code {Marshal.GetLastWin32Error()}).", Logger.StateKind.Error);
         return;
       }
-      reg.SetValue("ServiceDll", rdpWrap, RegistryValueKind.ExpandString);
+      reg.SetValue("ServiceDll", wrapPath, RegistryValueKind.ExpandString);
+#if !LIGHTVERSION
+      if (!useTermWrap) {
+        GenerateIniFile(Path.Combine(WrapperFolderPath, RdpWrapIniName));
+      }
+#endif
       logger.Log(" Done", Logger.StateKind.Info, false);
-
-      GenerateIniFile(Path.Combine(WrapperFolderPath, RdpWrapIniName));
+      if (prevServiceState is ServiceControllerStatus.Running)
+        serviceHelper.StartService(RdpServiceName, TimeSpan.FromSeconds(10));
     }
 
     internal void Uninstall() {
@@ -245,12 +292,20 @@ namespace rdpWrapper {
       logger.Log(" Done", Logger.StateKind.Info, false);
 
       var serviceState = serviceHelper.GetServiceState(RdpServiceName); 
-      if (serviceState is ServiceControllerStatus.Running)
+      if (serviceState is ServiceControllerStatus.Running) {
         serviceHelper.StopService(RdpServiceName, TimeSpan.FromSeconds(10));
+      }
 
       logger.Log("Removed folder: " + WrapperFolderPath);
-      Directory.Delete(WrapperFolderPath, true);
-
+      try {
+        Directory.Delete(WrapperFolderPath, true);
+      }
+      catch (DirectoryNotFoundException) {
+        //ignore
+      }
+      catch (Exception ex) {
+        logger.Log(ex.Message, Logger.StateKind.Error); //todo: ignore?
+      }
       if (serviceState.HasValue)
         serviceHelper.StartService(RdpServiceName, TimeSpan.FromSeconds(10));
     }

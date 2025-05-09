@@ -13,17 +13,26 @@
     <Nullable>disable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <!--<DefineConstants>LIGHTVERSION</DefineConstants>-->
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <!--<DefineConstants>LIGHTVERSION</DefineConstants>-->
     <DebugType>none</DebugType>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition="$(DefineConstants.Contains('LIGHTVERSION'))">
+    <None Remove="externals\TermWrap.dll" />
+    <None Remove="externals\UmWrap.dll" />
+    <None Remove="externals\Zydis.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(DefineConstants.Contains('LIGHTVERSION'))">
     <None Remove="externals\rdpwrap.dll" />
     <None Remove="externals\rdpwrap.ini" />
     <None Remove="externals\RDPWrapOffsetFinder.exe" />
     <None Remove="externals\Zydis.dll" />
+    <None Remove="externals\TermWrap.dll" />
+    <None Remove="externals\UmWrap.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="MainForm.Designer.cs">
@@ -37,11 +46,18 @@
     </Compile>
     <Content Include="app.ico" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="$(DefineConstants.Contains('LIGHTVERSION'))">
+    <EmbeddedResource Include="externals\TermWrap.dll" />
+    <EmbeddedResource Include="externals\UmWrap.dll" />
+    <EmbeddedResource Include="externals\Zydis.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(DefineConstants.Contains('LIGHTVERSION'))">
     <EmbeddedResource Include="externals\rdpwrap.dll" />
     <EmbeddedResource Include="externals\rdpwrap.ini" />
     <EmbeddedResource Include="externals\RDPWrapOffsetFinder.exe" />
     <EmbeddedResource Include="externals\Zydis.dll" />
+    <EmbeddedResource Include="externals\TermWrap.dll" />
+    <EmbeddedResource Include="externals\UmWrap.dll" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

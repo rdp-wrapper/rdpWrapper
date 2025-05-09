@@ -39,7 +39,6 @@ namespace rdpWrapper {
       logger.Log($"Application started: {title}", Logger.StateKind.Info, false);
       
       wrapper = new Wrapper(logger);
-      wrapper.OnError += message => MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error); 
       
       rgNLAOptions.Items.AddRange([
         "GUI Authentication Only", 
@@ -59,7 +58,7 @@ namespace rdpWrapper {
       InsertMenu(menuHandle, 6, MfByPosition, MfSysMenuCheckUpdates, "Check for new version");
       InsertMenu(menuHandle, 7, MfByPosition, MfSysMenuAboutId, "&About…");
 
-      Load += MainFormLoad;
+      Load += (sender, e) => { RefreshSystemSettings(); };
 
       Theme.SetAutoTheme();
       Theme.Current.Apply(this);
@@ -103,8 +102,7 @@ namespace rdpWrapper {
       }
     }
 
-    private void MainFormLoad(object sender, EventArgs e) {
-      
+    private void RefreshSystemSettings() {
       try {
         logger.Log("Retrieving system configuration...");
 
@@ -130,7 +128,7 @@ namespace rdpWrapper {
       catch (Exception ex) {
         var message = "Error loading settings: " + ex.Message;
         logger.Log(message, Logger.StateKind.Error);
-        MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
       btnApply.Enabled = false;
     }
@@ -206,7 +204,7 @@ namespace rdpWrapper {
 
     private void btnRestartService_Click(object sender, EventArgs e) {
       try {
-        btnRestartService.Enabled = false;
+        SetControlsState(false);
         //todo: async
         wrapper.StopService(TimeSpan.FromSeconds(10));
         wrapper.StartService(TimeSpan.FromSeconds(10));
@@ -217,29 +215,29 @@ namespace rdpWrapper {
         MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
       finally {
-        btnRestartService.Enabled = true;
+        SetControlsState(true);
       }
     }
 
     private void TimerTick(object sender, EventArgs e) {
 
-      var checkSupported = false;
+      bool? checkSupported = false;
       var wrapperInstalled = wrapper.CheckWrapperInstalled();
       switch (wrapperInstalled) {
-        case -1:
+        case WrapperInstalledState.Unknown:
           lblWrapperStateValue.Text = "Unknown";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
           btnInstall.Visible = false;
           btnUninstall.Visible = false;
           break;
-        case 0:
+        case WrapperInstalledState.NotInstalled:
           lblWrapperStateValue.Text = "Not installed";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
           btnInstall.Visible = true;
           btnUninstall.Visible = false;
           break;
-        case 1:
-          lblWrapperStateValue.Text = "Installed";
+        case WrapperInstalledState.RdpWrap:
+          lblWrapperStateValue.Text = "RdpWrap";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusOkColor;
           string wrapperIniPath = null;
           if (!string.IsNullOrEmpty(wrapper.WrapperPath)) {
@@ -253,14 +251,25 @@ namespace rdpWrapper {
             wrapperIniLastPath = wrapperIniPath;
             wrapperIniLastChecked = DateTime.MinValue;
           }
+          lblWrapperVersion.Visible = true;
           btnInstall.Visible = false;
           btnUninstall.Visible = true;
           break;
-        case 2:
+        case WrapperInstalledState.ThirdParty:
           lblWrapperStateValue.Text = "3rd-party";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusErrorColor;
           btnInstall.Visible = false;
           btnUninstall.Visible = false;
+          break;
+        case WrapperInstalledState.TermWrap:
+          lblWrapperStateValue.Text = "TermWrap";
+          lblWrapperStateValue.ForeColor = Theme.Current.StatusOkColor;
+          checkSupported = null;
+          wrapperIniLastChecked = DateTime.MinValue;
+          wrapperIniLastPath = null;
+          lblWrapperVersion.Visible = false;
+          btnInstall.Visible = false;
+          btnUninstall.Visible = true;
           break;
       }
 
@@ -327,9 +336,9 @@ namespace rdpWrapper {
         txtServiceVersion.Text = Wrapper.GetVersionString(versionInfo);
         txtServiceVersion.ForeColor = Theme.Current.ForegroundColor;
 
-        btnGenerate.Enabled = wrapperInstalled == 1;
-        lblSupported.Visible = checkSupported;
-        if (checkSupported) {
+        btnGenerate.Visible = wrapperInstalled == WrapperInstalledState.RdpWrap;
+        lblSupported.Visible = checkSupported is true;
+        if (checkSupported is true) {
           if (versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 0 ||
               versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 1) {
             lblSupported.Text = "[supported partially]";
@@ -351,6 +360,10 @@ namespace rdpWrapper {
           lblSupported.Text = "[not supported]";
           lblSupported.ForeColor = Theme.Current.StatusErrorColor;
         }
+        else if (!checkSupported.HasValue) {
+          lblSupported.Text = "[supported]";
+          lblSupported.ForeColor = Theme.Current.StatusOkColor;
+        }
       }
     }
 
@@ -360,11 +373,17 @@ namespace rdpWrapper {
 
     private void btnGenerate_Click(object sender, EventArgs e) {
       try {
-        btnGenerate.Enabled = false;
-        wrapper.GenerateIniFile(wrapperIniLastPath);
+        SetControlsState(false);
+#if LIGHTVERSION
+        MessageBox.Show("No need for Ini file with TermWrap.", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+#else
+        wrapper.GenerateIniFile(wrapperIniLastPath, true, (message) =>
+          MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error)
+        );
+#endif
       }
       finally {
-        btnGenerate.Enabled = true;
+        SetControlsState(true);
       }
     }
 
@@ -397,12 +416,25 @@ namespace rdpWrapper {
     private void btnInstall_Click(object sender, EventArgs e) {
 
       try {
-        btnInstall.Enabled = false;
+        SetControlsState(false);
+#if LIGHTVERSION
         wrapper.Install();
-
-        //todo: Thread.Sleep(1000); 
-        cbxAllowTSConnections.Checked = true;
-        btnApply.PerformClick();
+#else
+        var answer = MessageBox.Show("Choose:\n'Yes' - to install 'TermWrap'\n'No' - to install 'RdpWrap'\n'Cancel' - if you are not a confident person", Updater.ApplicationTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+        switch (answer) {
+          case DialogResult.Yes:
+            wrapper.Install(true);
+            break;
+          case DialogResult.No:
+            wrapper.Install(false);
+            break;
+          default:
+            return;
+        }
+#endif
+        //cbxAllowTSConnections.Checked = true;
+        //btnApply.PerformClick();
+        //btnRestartService.PerformClick();
       }
       catch (Exception ex) {
         var message = "Failed to Install: " + ex.Message;
@@ -410,13 +442,13 @@ namespace rdpWrapper {
         MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
       finally {
-        btnInstall.Enabled = true;
+        SetControlsState(true);
       }
     }
 
     private void btnUninstall_Click(object sender, EventArgs e) {
       try {
-        btnUninstall.Enabled = false;
+        SetControlsState(false);
         wrapper.Uninstall();
         
         //cbxAllowTSConnections.Checked = false;
@@ -428,8 +460,16 @@ namespace rdpWrapper {
         MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
       finally {
-        btnUninstall.Enabled = true;
+        SetControlsState(true);
       }
+    }
+
+    private void SetControlsState(bool enabled) {
+      refreshTimer.Enabled = enabled;
+      btnUninstall.Enabled = enabled;
+      btnRestartService.Enabled = enabled;
+      btnGenerate.Enabled = enabled;
+      btnInstall.Enabled = enabled;
     }
   }
 }
