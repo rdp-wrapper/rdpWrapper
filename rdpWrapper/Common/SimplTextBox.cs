@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace rdpWrapper {
+namespace sergiye.Common {
 
   public class SimplTextBox : RichTextBox {
 

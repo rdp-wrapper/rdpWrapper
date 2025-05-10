@@ -43,7 +43,7 @@ namespace rdpWrapper {
       this.lblListenerState = new System.Windows.Forms.Label();
       this.lblServiceState = new System.Windows.Forms.Label();
       this.lblWrapperState = new System.Windows.Forms.Label();
-      this.txtLog = new rdpWrapper.SimplTextBox();
+      this.txtLog = new sergiye.Common.SimplTextBox();
       this.mainMenu = new System.Windows.Forms.MenuStrip();
       this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -606,7 +606,7 @@ namespace rdpWrapper {
     private Label lblWrapperState;
     private TextBox txtServiceVersion;
     private Button btnGenerate;
-    private rdpWrapper.SimplTextBox txtLog;
+    private sergiye.Common.SimplTextBox txtLog;
     private Button btnInstall;
     private Button btnUninstall;
     private MenuStrip mainMenu;
