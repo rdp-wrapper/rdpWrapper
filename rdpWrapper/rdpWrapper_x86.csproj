@@ -20,14 +20,15 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
-  <ItemGroup Condition="$(DefineConstants.Contains('LIGHTVERSION'))">
-    <None Remove="externals\x86\TermWrap.dll" />
-    <None Remove="externals\x86\Zydis.dll" />
+  <ItemGroup>
+    <Compile Remove="externals\x64\**" />
+    <EmbeddedResource Remove="externals\x64\**" />
+    <None Remove="externals\x64\**" />
   </ItemGroup>
-  <ItemGroup Condition="!$(DefineConstants.Contains('LIGHTVERSION'))">
-    <None Remove="externals\rdpwrap.dll" />
+  <ItemGroup>
+    <None Remove="externals\x86\rdpwrap.dll" />
     <None Remove="externals\rdpwrap.ini" />
-    <None Remove="externals\RDPWrapOffsetFinder.exe" />
+    <None Remove="externals\x86\RDPWrapOffsetFinder.exe" />
     <None Remove="externals\x86\Zydis.dll" />
     <None Remove="externals\x86\TermWrap.dll" />
   </ItemGroup>
@@ -46,14 +47,10 @@
     </Compile>
     <Content Include="app.ico" />
   </ItemGroup>
-  <ItemGroup Condition="$(DefineConstants.Contains('LIGHTVERSION'))">
-    <EmbeddedResource Include="externals\x86\TermWrap.dll" />
-    <EmbeddedResource Include="externals\x86\Zydis.dll" />
-  </ItemGroup>
-  <ItemGroup Condition="!$(DefineConstants.Contains('LIGHTVERSION'))">
-    <EmbeddedResource Include="externals\rdpwrap.dll" />
+  <ItemGroup>
+    <EmbeddedResource Include="externals\x86\rdpwrap.dll" />
     <EmbeddedResource Include="externals\rdpwrap.ini" />
-    <EmbeddedResource Include="externals\RDPWrapOffsetFinder.exe" />
+    <EmbeddedResource Include="externals\x86\RDPWrapOffsetFinder.exe" />
     <EmbeddedResource Include="externals\x86\Zydis.dll" />
     <EmbeddedResource Include="externals\x86\TermWrap.dll" />
   </ItemGroup>

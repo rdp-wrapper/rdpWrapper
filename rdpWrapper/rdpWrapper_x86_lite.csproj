@@ -23,6 +23,11 @@
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="externals\x64\**" />
+    <EmbeddedResource Remove="externals\x64\**" />
+    <None Remove="externals\x64\**" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="externals\x86\TermWrap.dll" />
     <None Remove="externals\x86\Zydis.dll" />
   </ItemGroup>

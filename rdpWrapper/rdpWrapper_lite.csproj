@@ -25,6 +25,8 @@
     <None Remove="externals\x64\TermWrap.dll" />
     <None Remove="externals\x64\UmWrap.dll" />
     <None Remove="externals\x64\Zydis.dll" />
+    <None Remove="externals\x86\Zydis.dll" />
+    <None Remove="externals\x86\TermWrap.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="MainForm.Designer.cs">
@@ -42,6 +44,8 @@
     <EmbeddedResource Include="externals\x64\TermWrap.dll" />
     <EmbeddedResource Include="externals\x64\UmWrap.dll" />
     <EmbeddedResource Include="externals\x64\Zydis.dll" />
+    <EmbeddedResource Include="externals\x86\Zydis.dll" />
+    <EmbeddedResource Include="externals\x86\TermWrap.dll" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

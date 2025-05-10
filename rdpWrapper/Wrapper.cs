@@ -46,15 +46,13 @@ namespace rdpWrapper {
 
     private readonly Logger logger;
     private readonly ServiceHelper serviceHelper;
+    private readonly RegistryView registryView = Environment.Is64BitOperatingSystem ? RegistryView.Registry64 : RegistryView.Registry32;
 
     internal Wrapper(Logger logger) {
       this.logger = logger;
       serviceHelper = new ServiceHelper(logger);
 
-      //WrapperFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RDP Wrapper");
-      WrapperFolderPath = Environment.Is64BitOperatingSystem
-        ? Path.Combine(Environment.ExpandEnvironmentVariables("%ProgramW6432%"), "RDP Wrapper")
-        : Path.Combine(Environment.ExpandEnvironmentVariables("%ProgramFiles(x86)%"), "RDP Wrapper");
+      WrapperFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RDP Wrapper");
 
       if (Environment.Is64BitOperatingSystem && !Environment.Is64BitProcess) {
         TermSrvFile = Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Sysnative"), TermSrvName);
@@ -81,96 +79,100 @@ namespace rdpWrapper {
     internal readonly string WrapperFolderPath;
 
     private void ReadSettings() {
+      using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+        using (var key = baseKey.OpenSubKey(RegKey)) {
+          if (key != null) {
+            SingleSessionPerUser = Convert.ToInt32(key.GetValue(ValueSingleSession, 0)) != 0;
+            AllowTsConnections = Convert.ToInt32(key.GetValue(ValueDenyTsConnections, 0)) == 0;
+            HonorLegacy = Convert.ToInt32(key.GetValue(ValueHonorLegacy, 0)) != 0;
+          }
+        }
 
-      using (var key = Registry.LocalMachine.OpenSubKey(RegKey)) {
-        if (key != null) {
-          SingleSessionPerUser = Convert.ToInt32(key.GetValue(ValueSingleSession, 0)) != 0;
-          AllowTsConnections = Convert.ToInt32(key.GetValue(ValueDenyTsConnections, 0)) == 0;
-          HonorLegacy = Convert.ToInt32(key.GetValue(ValueHonorLegacy, 0)) != 0;
+        using (var key = baseKey.OpenSubKey(RegRdpKey)) {
+          if (key != null) {
+            RdpPort = Convert.ToInt32(key.GetValue(ValuePort, 3389));
+            UserAuthentication = Convert.ToInt32(key.GetValue(ValueNla, 0));
+            SecurityLayer = Convert.ToInt32(key.GetValue(ValueSecurity, 0));
+            ShadowOptions = Convert.ToInt32(key.GetValue(ValueShadow, 0));
+          }
         }
-      }
-      
-      using (var key = Registry.LocalMachine.OpenSubKey(RegRdpKey)) {
-        if (key != null) {
-          RdpPort = Convert.ToInt32(key.GetValue(ValuePort, 3389));
-          UserAuthentication = Convert.ToInt32(key.GetValue(ValueNla, 0));
-          SecurityLayer = Convert.ToInt32(key.GetValue(ValueSecurity, 0));
-          ShadowOptions = Convert.ToInt32(key.GetValue(ValueShadow, 0));
+
+        using (var key = baseKey.OpenSubKey(RegWinLogonKey)) {
+          if (key != null)
+            DontDisplayLastUser = Convert.ToInt32(key.GetValue(ValueDontDisplayLastUserName, 0)) != 0;
         }
-      }
- 
-      using (var key = Registry.LocalMachine.OpenSubKey(RegWinLogonKey)) {
-        if (key != null)
-          DontDisplayLastUser = Convert.ToInt32(key.GetValue(ValueDontDisplayLastUserName, 0)) != 0;
       }
     }
 
     internal void SaveSettings() {
 
-      using (var key = Registry.LocalMachine.OpenSubKey(RegKey, writable: true)) {
-        if (key != null) {
-          key.SetValue(ValueSingleSession, SingleSessionPerUser ? 1 : 0, RegistryValueKind.DWord);
-          key.SetValue(ValueDenyTsConnections, AllowTsConnections ? 0 : 1, RegistryValueKind.DWord);
-          key.SetValue(ValueHonorLegacy, HonorLegacy ? 1 : 0, RegistryValueKind.DWord);
+      using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+        using (var key = baseKey.OpenSubKey(RegKey, writable: true)) {
+          if (key != null) {
+            key.SetValue(ValueSingleSession, SingleSessionPerUser ? 1 : 0, RegistryValueKind.DWord);
+            key.SetValue(ValueDenyTsConnections, AllowTsConnections ? 0 : 1, RegistryValueKind.DWord);
+            key.SetValue(ValueHonorLegacy, HonorLegacy ? 1 : 0, RegistryValueKind.DWord);
+          }
         }
-      }
-     
-      using (var key = Registry.LocalMachine.OpenSubKey(RegRdpKey, true)) {
-        if (key != null) {
-          key.SetValue(ValuePort, RdpPort, RegistryValueKind.DWord);
-          key.SetValue(ValueNla, UserAuthentication, RegistryValueKind.DWord);
-          key.SetValue(ValueSecurity, SecurityLayer, RegistryValueKind.DWord);
-          key.SetValue(ValueShadow, ShadowOptions, RegistryValueKind.DWord);
+
+        using (var key = baseKey.OpenSubKey(RegRdpKey, true)) {
+          if (key != null) {
+            key.SetValue(ValuePort, RdpPort, RegistryValueKind.DWord);
+            key.SetValue(ValueNla, UserAuthentication, RegistryValueKind.DWord);
+            key.SetValue(ValueSecurity, SecurityLayer, RegistryValueKind.DWord);
+            key.SetValue(ValueShadow, ShadowOptions, RegistryValueKind.DWord);
+          }
         }
-      }
 
-      using (var key = Registry.LocalMachine.CreateSubKey(RegTsKey)) {
-        key?.SetValue(ValueShadow, ShadowOptions, RegistryValueKind.DWord);
-      }
+        using (var key = baseKey.CreateSubKey(RegTsKey)) {
+          key?.SetValue(ValueShadow, ShadowOptions, RegistryValueKind.DWord);
+        }
 
-      using (var key = Registry.LocalMachine.CreateSubKey(RegWinLogonKey)) {
-        key?.SetValue(ValueDontDisplayLastUserName, DontDisplayLastUser ? 1 : 0, RegistryValueKind.DWord);
+        using (var key = baseKey.CreateSubKey(RegWinLogonKey)) {
+          key?.SetValue(ValueDontDisplayLastUserName, DontDisplayLastUser ? 1 : 0, RegistryValueKind.DWord);
+        }
       }
     }
  
     internal WrapperInstalledState CheckWrapperInstalled() {
       WrapperPath = string.Empty;
       try {
-        using (var serviceKey = Registry.LocalMachine.OpenSubKey(RegTermServiceKey)) {
-          if (serviceKey == null)
-            return WrapperInstalledState.Unknown;
-          var termServiceHost = serviceKey.GetValue("ImagePath") as string;
-          if (string.IsNullOrWhiteSpace(termServiceHost) || !termServiceHost.ToLower().Contains("svchost.exe"))
-            return WrapperInstalledState.ThirdParty;
-        }
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+          using (var serviceKey = baseKey.OpenSubKey(RegTermServiceKey)) {
+            if (serviceKey == null)
+              return WrapperInstalledState.Unknown;
+            var termServiceHost = serviceKey.GetValue("ImagePath") as string;
+            if (string.IsNullOrWhiteSpace(termServiceHost) || !termServiceHost.ToLower().Contains("svchost.exe"))
+              return WrapperInstalledState.ThirdParty;
+          }
 
-        string termServicePath;
-        using (var paramKey = Registry.LocalMachine.OpenSubKey(RegTermServiceKey + "\\Parameters")) {
-          if (paramKey == null)
-            return WrapperInstalledState.Unknown;
+          string termServicePath;
+          using (var paramKey = baseKey.OpenSubKey(RegTermServiceKey + "\\Parameters")) {
+            if (paramKey == null)
+              return WrapperInstalledState.Unknown;
 
-          termServicePath = paramKey.GetValue("ServiceDll") as string;
-          if (string.IsNullOrWhiteSpace(termServicePath))
-            return WrapperInstalledState.Unknown;
-        }
+            termServicePath = paramKey.GetValue("ServiceDll") as string;
+            if (string.IsNullOrWhiteSpace(termServicePath))
+              return WrapperInstalledState.Unknown;
+          }
 
-        //if (Environment.Is64BitProcess || !Environment.Is64BitOperatingSystem) {
-        //  if (!File.Exists(termServicePath))
-        //    return WrapperInstalledState.Unknown;
-        //}
-        var wrapperName = Path.GetFileName(termServicePath);
-        if (TermSrvName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) 
-          return WrapperInstalledState.NotInstalled;
-        if (RdpWrapDllName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) {
-          WrapperPath = termServicePath;
-          //WrapperFolderPath = Path.GetDirectoryName(termServicePath);
-          return WrapperInstalledState.RdpWrap;
+          //if (Environment.Is64BitProcess || !Environment.Is64BitOperatingSystem) {
+          //  if (!File.Exists(termServicePath))
+          //    return WrapperInstalledState.Unknown;
+          //}
+          var wrapperName = Path.GetFileName(termServicePath);
+          if (TermSrvName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase))
+            return WrapperInstalledState.NotInstalled;
+          if (RdpWrapDllName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) {
+            WrapperPath = termServicePath;
+            //WrapperFolderPath = Path.GetDirectoryName(termServicePath);
+            return WrapperInstalledState.RdpWrap;
+          }
+          if (TermWrapDllName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) {
+            WrapperPath = termServicePath;
+            return WrapperInstalledState.TermWrap;
+          }
         }
-        if (TermWrapDllName.Equals(wrapperName, StringComparison.OrdinalIgnoreCase)) {
-          WrapperPath = termServicePath;
-          return WrapperInstalledState.TermWrap;
-        }
-
         return WrapperInstalledState.ThirdParty;
       }
       catch {
@@ -198,7 +200,7 @@ namespace rdpWrapper {
 
     #endregion
 
-#if !LIGHTVERSION
+#if !LITEVERSION
     internal void GenerateIniFile(string destFilePath, bool executeCleanup = true, Action<string> onError = null) {
 
       string iniFile = null;
@@ -208,11 +210,14 @@ namespace rdpWrapper {
         logger.Log("Generating config...");
         var workingDir = Path.GetTempPath();
         iniFile = ExtractResourceFile(RdpWrapIniName, workingDir, true);
-        offsetFinder = ExtractResourceFile("RDPWrapOffsetFinder.exe", workingDir);
+        offsetFinder = ExtractResourceFile("RDPWrapOffsetFinder.exe", workingDir, archPrefix: true);
         zydis = ExtractResourceFile(ZydisDllName, workingDir, archPrefix: true);
         var p = StartProcess("cmd", $"/c \"{offsetFinder}\" >> {RdpWrapIniName} & exit", workingDir);
-        p.WaitForExit(); //todo: check p.ExitCode
-        logger.Log(" Done", Logger.StateKind.Info, false);
+        p.WaitForExit();
+        if (p.ExitCode == 0)
+          logger.Log(" Done", Logger.StateKind.Info, false);
+        else
+          logger.Log(" Error", Logger.StateKind.Error, false);
       }
       catch (Exception ex) {
         var message = "Failed to generate config: " + ex.Message;
@@ -244,7 +249,7 @@ namespace rdpWrapper {
     }
 #endif
 
-#if LIGHTVERSION
+#if LITEVERSION
     internal void Install() {
       const bool useTermWrap = true;
 #else
@@ -275,21 +280,24 @@ namespace rdpWrapper {
           logger.Log("Extracted umWrap.dll -> " + umWrap);
         }
       }
-#if !LIGHTVERSION
+#if !LITEVERSION
       else {
-        wrapPath = ExtractResourceFile(RdpWrapDllName, WrapperFolderPath);
+        wrapPath = ExtractResourceFile(RdpWrapDllName, WrapperFolderPath, archPrefix: true);
         logger.Log("Extracted rdpWrap.dll -> " + wrapPath);
       }
 #endif
 
       logger.Log("Configuring service library...");
-      using var reg = Registry.LocalMachine.OpenSubKey(RegTermServiceKey + "\\Parameters", writable: true);
-      if (reg == null) {
-        logger.Log($"OpenKey error (code {Marshal.GetLastWin32Error()}).", Logger.StateKind.Error);
-        return;
+      using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+        using (var reg = baseKey.OpenSubKey(RegTermServiceKey + "\\Parameters", writable: true)) {
+          if (reg == null) {
+            logger.Log($"OpenKey error (code {Marshal.GetLastWin32Error()}).", Logger.StateKind.Error);
+            return;
+          }
+          reg.SetValue("ServiceDll", wrapPath, RegistryValueKind.ExpandString);
+        }
       }
-      reg.SetValue("ServiceDll", wrapPath, RegistryValueKind.ExpandString);
-#if !LIGHTVERSION
+#if !LITEVERSION
       if (!useTermWrap) {
         GenerateIniFile(Path.Combine(WrapperFolderPath, RdpWrapIniName));
       }
@@ -301,14 +309,16 @@ namespace rdpWrapper {
 
     internal void Uninstall() {
       logger.Log("Resetting service library...");
-      using var reg = Registry.LocalMachine.OpenSubKey(RegTermServiceKey + "\\Parameters", writable: true);
-      if (reg == null) {
-        logger.Log($"OpenKey error (code {Marshal.GetLastWin32Error()}).", Logger.StateKind.Error);
-        return;
+      using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+        using (var reg = baseKey.OpenSubKey(RegTermServiceKey + "\\Parameters", writable: true)) {
+          if (reg == null) {
+            logger.Log($"OpenKey error (code {Marshal.GetLastWin32Error()}).", Logger.StateKind.Error);
+            return;
+          }
+          reg.SetValue("ServiceDll", @"%SystemRoot%\System32\termsrv.dll", RegistryValueKind.ExpandString);
+        }
       }
-      reg.SetValue("ServiceDll", @"%SystemRoot%\System32\termsrv.dll", RegistryValueKind.ExpandString);
       logger.Log(" Done", Logger.StateKind.Info, false);
-
       var serviceState = serviceHelper.GetServiceState(RdpServiceName); 
       if (serviceState is ServiceControllerStatus.Running) {
         serviceHelper.StopService(RdpServiceName, TimeSpan.FromSeconds(10));

@@ -34,8 +34,7 @@ namespace rdpWrapper {
 
       if (!IsVcRedistInstalled(sysArch)) {
         if (MessageBox.Show("Microsoft Visual C++ 2015-2022 Redistributable is not installed.\nWould you like to download it now?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
-          if (Environment.Is64BitOperatingSystem)
-            Process.Start($"https://aka.ms/vs/17/release/vc_redist.{sysArch}.exe");
+          Process.Start($"https://aka.ms/vs/17/release/vc_redist.{sysArch}.exe");
         }
         Environment.Exit(1);
       }

@@ -97,7 +97,7 @@ namespace rdpWrapper {
     }
 
     private void aboutToolStripMenuItem_Click(object sender, EventArgs e) {
-      MessageBox.Show($"{Updater.ApplicationTitle} {Updater.CurrentVersion} {(Environment.Is64BitProcess ? "x64" : "x32")}\nWritten by Sergiy Egoshyn (egoshin.sergey@gmail.com)", Updater.ApplicationTitle, MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+      MessageBox.Show($"{Updater.ApplicationTitle} {Updater.CurrentVersion} {(Environment.Is64BitProcess ? "x64" : "x32")}\nWritten by Sergiy Egoshyn (egoshin.sergey@gmail.com)", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     private void RefreshSystemSettings() {
@@ -375,7 +375,7 @@ namespace rdpWrapper {
         txtServiceVersion.Text = Wrapper.GetVersionString(versionInfo);
         txtServiceVersion.ForeColor = Theme.Current.ForegroundColor;
 
-#if LIGHTVERSION
+#if LITEVERSION
         btnGenerate.Visible = false;
 #else
         generateMenuItem.Enabled = btnGenerate.Visible = wrapperInstalled == WrapperInstalledState.RdpWrap;
@@ -417,7 +417,7 @@ namespace rdpWrapper {
     private void btnGenerate_Click(object sender, EventArgs e) {
       try {
         SetControlsState(false);
-#if LIGHTVERSION
+#if LITEVERSION
         MessageBox.Show("No need for Ini file with TermWrap.", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
 #else
         wrapper.GenerateIniFile(wrapperIniLastPath, true, (message) =>
@@ -460,7 +460,7 @@ namespace rdpWrapper {
 
       try {
         SetControlsState(false);
-#if LIGHTVERSION
+#if LITEVERSION
         wrapper.Install();
 #else
         var answer = MessageBox.Show("Choose:\n'Yes' - to install 'TermWrap'\n'No' - to install 'RdpWrap'\n'Cancel' - if you are not a confident person", Updater.ApplicationTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);

@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rdpWrapper", "rdpWrapper\rd
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rdpWrapper_x86", "rdpWrapper\rdpWrapper_x86.csproj", "{BED57C3A-E1EE-4D5F-A499-978FD8638F15}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rdpWrapper_light", "rdpWrapper\rdpWrapper_light.csproj", "{BAF31038-47C9-46B8-A6AD-75143DFFF395}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rdpWrapper_lite", "rdpWrapper\rdpWrapper_lite.csproj", "{BAF31038-47C9-46B8-A6AD-75143DFFF395}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rdpWrapper_x86_light", "rdpWrapper\rdpWrapper_x86_light.csproj", "{0597DCFD-DC94-4DB3-8161-B0EA239B4627}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "rdpWrapper_x86_lite", "rdpWrapper\rdpWrapper_x86_lite.csproj", "{0597DCFD-DC94-4DB3-8161-B0EA239B4627}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
