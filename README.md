@@ -64,7 +64,3 @@ The rdpWrapper team welcomes feedback and contributions!<br/>
 You can check if it works properly on your PC. If you notice any inaccuracies, please send us a pull request. If you have any suggestions or improvements, don't hesitate to create an issue.
 
 Also, don't forget to star the repository to help other people find it.
-
-## License
-
-RDP Wrapper is free and open source software licensed under GNU General Public License, Version 3 [GNU 3.0](https://www.gnu.org/licenses/gpl-3.0.html). You can use it for personal and commercial purposes.
