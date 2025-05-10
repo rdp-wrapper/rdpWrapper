@@ -13,7 +13,7 @@ This tool is inspired by the [stascorp's rdpwrap project](https://github.com/sta
 However it is written in pure .NET instead of Pascal/Delphi.
 The main idea was to create small and portable single-file application with all required functionality.
 
-And yes, it can auto-generate offsets for new/updated Windows versions - thanks to the llccd's projects:
+And yes, it can auto-generate offsets for new/updated Windows versions - thanks to the @llccd projects:
  - [TermWrap](https://github.com/llccd/TermWrap)
  - [RDPWrapOffsetFinder](https://github.com/llccd/RDPWrapOffsetFinder).
 
@@ -46,7 +46,7 @@ Also there are:
  - `Light`/`Dark` themes with auto switching mode.
  - Custom `themes` supported from external files
 
-You can find custom theme examples [here](https://github.com/rdp-wrapper/rdpWrapper/tree/master/rdpWrapper/Resources/themes)
+You can find custom theme examples [here](https://github.com/rdp-wrapper/rdpWrapper/tree/master/themes)
 To add custom theme to the app, just create a `themes` folder next to the executable file and place all theme files there.
 Don't forget to restart the app to scan for new theme files!
 
