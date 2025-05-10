@@ -1,0 +1,4 @@
+[submodule "rdpWrapper/Common"]
+	path = rdpWrapper/Common
+	url = https://github.com/sergiye/common.git
+	branch = master
