@@ -1,0 +1,11 @@
+{
+    "DisplayName": "Rich Carmine",
+    "DarkMode": true,
+    "BackgroundColor": "#3C3C3C",
+    "ForegroundColor": "#E9E9E9",
+    "HyperlinkColor": "#FF3C7C",
+    "SelectedBackgroundColor": "#D70040",
+    "SelectedForegroundColor": "#E9E9E9",
+    "LineColor": "#404040",
+    "StrongLineColor": "#454545"
+}

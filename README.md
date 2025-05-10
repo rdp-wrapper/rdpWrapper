@@ -42,6 +42,13 @@ Here's a preview of the app's UI running on Windows 10:
 
 [<img src="https://github.com/rdp-wrapper/rdpWrapper/raw/master/preview.png" alt="Themes" width="300"/>](https://raw.githubusercontent.com/rdp-wrapper/rdpWrapper/master/preview.png)
 
+Also there are:
+ - `Light`/`Dark` themes with auto switching mode.
+ - Custom `themes` supported from external files
+
+You can find custom theme examples [here](https://github.com/rdp-wrapper/rdpWrapper/tree/master/rdpWrapper/Resources/themes)
+To add custom theme to the app, just create a `themes` folder next to the executable file and place all theme files there.
+Don't forget to restart the app to scan for new theme files!
 
 ## Download
 

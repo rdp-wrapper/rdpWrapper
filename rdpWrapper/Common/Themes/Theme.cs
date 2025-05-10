@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -8,21 +10,28 @@ namespace sergiye.Common {
 
   public abstract class Theme {
 
-    private static Theme _current = new LightTheme();
+    private static Theme current = new LightTheme();
     public static Theme Current {
-      get { return _current; }
+      get => current;
       set {
-        _current = value;
+        current = value;
         foreach (Form form in Application.OpenForms) {
-          _current.Apply(form);
+          current.Apply(form);
         }
-
         Init();
       }
     }
 
     private static void Init() {
       //todo: apply custom renders
+    }
+
+    private static List<Theme> all;
+    public static List<Theme> All {
+      get {
+        all ??= CustomTheme.GetAllThemes().OrderBy(x => x.DisplayName).ToList();
+        return all;
+      }
     }
 
     public static bool SupportsAutoThemeSwitching() {
@@ -47,7 +56,7 @@ namespace sergiye.Common {
       }
     }
 
-    public Theme(string id, string displayName) {
+    protected Theme(string id, string displayName) {
       Id = id;
       DisplayName = displayName;
     }
@@ -105,19 +114,19 @@ namespace sergiye.Common {
     public void Apply(Form form) {
       if (IsWindows10OrGreater(22000)) {
         // Windows 11, Set the titlebar color based on theme
-        int color = ColorTranslator.ToWin32(WindowTitlebarBackgroundColor);
-        DwmSetWindowAttribute(form.Handle, DWMWA_CAPTION_COLOR, ref color, sizeof(int));
+        var color = ColorTranslator.ToWin32(WindowTitlebarBackgroundColor);
+        DwmSetWindowAttribute(form.Handle, DwmwaCaptionColor, ref color, sizeof(int));
         color = ColorTranslator.ToWin32(WindowTitlebarForegroundColor);
-        DwmSetWindowAttribute(form.Handle, DWMWA_TEXT_COLOR, ref color, sizeof(int));
+        DwmSetWindowAttribute(form.Handle, DwmwaTextColor, ref color, sizeof(int));
       }
       else if (IsWindows10OrGreater(17763)) {
         // Windows 10, fallback to using "Immersive Dark Mode" instead
-        var attribute = DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1;
+        var attribute = DwmwaUseImmersiveDarkModeBefore20H1;
         if (IsWindows10OrGreater(18985)) {
           // Windows 10 20H1 or later
-          attribute = DWMWA_USE_IMMERSIVE_DARK_MODE;
+          attribute = DwmwaUseImmersiveDarkMode;
         }
-        int useImmersiveDarkMode = WindowTitlebarFallbackToImmersiveDarkMode ? 1 : 0;
+        var useImmersiveDarkMode = WindowTitlebarFallbackToImmersiveDarkMode ? 1 : 0;
         DwmSetWindowAttribute(form.Handle, attribute, ref useImmersiveDarkMode, sizeof(int));
       }
       form.BackColor = BackgroundColor;
@@ -134,6 +143,14 @@ namespace sergiye.Common {
         button.FlatAppearance.MouseOverBackColor = ButtonHoverBackgroundColor;
         button.FlatAppearance.MouseDownBackColor = ButtonPressedBackgroundColor;
       }
+      if (control is ComboBox combo) {
+        combo.ForeColor = ForegroundColor;
+        combo.BackColor = BackgroundColor;
+        combo.FlatStyle = FlatStyle.Flat;
+        combo.DrawMode = DrawMode.OwnerDrawFixed;
+        combo.DrawItem -= ComboBox_DrawItem;
+        combo.DrawItem += ComboBox_DrawItem;
+      }
       else if (control is LinkLabel linkLabel) {
         linkLabel.LinkColor = HyperlinkColor;
       }
@@ -147,14 +164,27 @@ namespace sergiye.Common {
       }
     }
 
+    private void ComboBox_DrawItem(object sender, DrawItemEventArgs e) {
+      if (e.Index < 0) return;
+      if (sender is not ComboBox combo) return;
+      var isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+      using (var backgroundBrush = new SolidBrush(isSelected ? SelectedBackgroundColor : combo.BackColor)) {
+        e.Graphics.FillRectangle(backgroundBrush, e.Bounds);
+      }
+      using (var textBrush = new SolidBrush(isSelected ? SelectedForegroundColor : combo.ForeColor)) {
+        e.Graphics.DrawString(combo.Items[e.Index].ToString(), e.Font, textBrush, e.Bounds);
+      }
+      e.DrawFocusRectangle();
+    }
+
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
-    private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
-    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-    private const int DWMWA_BORDER_COLOR = 34;
-    private const int DWMWA_CAPTION_COLOR = 35;
-    private const int DWMWA_TEXT_COLOR = 36;
+    private const int DwmwaUseImmersiveDarkModeBefore20H1 = 19;
+    private const int DwmwaUseImmersiveDarkMode = 20;
+    private const int DwmwaBorderColor = 34;
+    private const int DwmwaCaptionColor = 35;
+    private const int DwmwaTextColor = 36;
 
     private static bool IsWindows10OrGreater(int build = -1) {
       return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;

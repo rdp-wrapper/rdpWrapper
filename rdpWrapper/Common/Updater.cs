@@ -194,5 +194,12 @@ namespace sergiye.Common {
       Application.Exit();
 #endif
     }
+
+    internal static void VisitAppSite(string subPage = null) {
+      var url = $"https://github.com/{Updater.ApplicationCompany}/{Updater.ApplicationName}";
+      if (!string.IsNullOrEmpty(subPage))
+        url += "/" + subPage;
+      Process.Start(url);
+    }
   }
 }

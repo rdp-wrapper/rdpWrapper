@@ -1,0 +1,11 @@
+{
+    "DisplayName": "Blue Sky",
+    "DarkMode": true,
+    "BackgroundColor": "#3C3C3C",
+    "ForegroundColor": "#E9E9E9",
+    "HyperlinkColor": "#74B2D8",
+    "SelectedBackgroundColor": "#2170CF",
+    "SelectedForegroundColor": "#E9E9E9",
+    "LineColor": "#404040",
+    "StrongLineColor": "#454545"
+}
