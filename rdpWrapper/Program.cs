@@ -20,16 +20,9 @@ namespace rdpWrapper {
       var sysArch = Environment.Is64BitOperatingSystem ? "x64" : "x86";
       var appArch = Environment.Is64BitProcess ? "x64" : "x86";
       if (sysArch != appArch) {
-        var answer = MessageBox.Show($"You are running {appArch} application on {sysArch} OS.\nIt may not be compatible!\nWould you like to download correct version?", Updater.ApplicationName, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
-        switch (answer) {
-          case DialogResult.Yes:
-            Updater.VisitAppSite("releases");
-            return;
-          case DialogResult.No:
-            break;
-          case DialogResult.Cancel:
-            return;
-        }
+        if (MessageBox.Show($"You are running {appArch} application on {sysArch} OS.\nIt is not compatible!\nWould you like to download correct version?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+          Updater.VisitAppSite("releases");
+        return;
       }
 
       if (!IsVcRedistInstalled(sysArch)) {

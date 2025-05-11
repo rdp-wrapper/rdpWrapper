@@ -31,7 +31,6 @@ namespace rdpWrapper {
       this.lblShadowMode = new System.Windows.Forms.Label();
       this.lblAuthMode = new System.Windows.Forms.Label();
       this.gbxStatus = new System.Windows.Forms.GroupBox();
-      this.btnUninstall = new System.Windows.Forms.Button();
       this.btnInstall = new System.Windows.Forms.Button();
       this.btnGenerate = new System.Windows.Forms.Button();
       this.txtServiceVersion = new System.Windows.Forms.TextBox();
@@ -47,7 +46,6 @@ namespace rdpWrapper {
       this.mainMenu = new System.Windows.Forms.MenuStrip();
       this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-      this.btnApply = new System.Windows.Forms.ToolStripMenuItem();
       this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
       this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -78,7 +76,6 @@ namespace rdpWrapper {
       this.cbxSingleSessionPerUser.Size = new System.Drawing.Size(134, 17);
       this.cbxSingleSessionPerUser.TabIndex = 1;
       this.cbxSingleSessionPerUser.Text = "Single session per user";
-      this.cbxSingleSessionPerUser.CheckedChanged += new System.EventHandler(this.OnChanged);
       // 
       // cbxAllowTSConnections
       // 
@@ -89,7 +86,6 @@ namespace rdpWrapper {
       this.cbxAllowTSConnections.Size = new System.Drawing.Size(142, 17);
       this.cbxAllowTSConnections.TabIndex = 0;
       this.cbxAllowTSConnections.Text = "Enable Remote Desktop";
-      this.cbxAllowTSConnections.CheckedChanged += new System.EventHandler(this.OnChanged);
       // 
       // cbDontDisplayLastUser
       // 
@@ -100,7 +96,6 @@ namespace rdpWrapper {
       this.cbDontDisplayLastUser.Size = new System.Drawing.Size(161, 17);
       this.cbDontDisplayLastUser.TabIndex = 2;
       this.cbDontDisplayLastUser.Text = "Do not display last username";
-      this.cbDontDisplayLastUser.CheckedChanged += new System.EventHandler(this.OnChanged);
       // 
       // rgNLAOptions
       // 
@@ -112,7 +107,6 @@ namespace rdpWrapper {
       this.rgNLAOptions.Name = "rgNLAOptions";
       this.rgNLAOptions.Size = new System.Drawing.Size(185, 21);
       this.rgNLAOptions.TabIndex = 7;
-      this.rgNLAOptions.SelectedIndexChanged += new System.EventHandler(this.OnChanged);
       // 
       // rgShadowOptions
       // 
@@ -124,7 +118,6 @@ namespace rdpWrapper {
       this.rgShadowOptions.Name = "rgShadowOptions";
       this.rgShadowOptions.Size = new System.Drawing.Size(185, 21);
       this.rgShadowOptions.TabIndex = 9;
-      this.rgShadowOptions.SelectedIndexChanged += new System.EventHandler(this.OnChanged);
       // 
       // seRDPPort
       // 
@@ -149,7 +142,6 @@ namespace rdpWrapper {
             0,
             0,
             0});
-      this.seRDPPort.ValueChanged += new System.EventHandler(this.OnChanged);
       // 
       // lRDPPort
       // 
@@ -169,7 +161,6 @@ namespace rdpWrapper {
       this.cbxHonorLegacy.Size = new System.Drawing.Size(169, 17);
       this.cbxHonorLegacy.TabIndex = 3;
       this.cbxHonorLegacy.Text = "Allow to start custom programs";
-      this.cbxHonorLegacy.CheckedChanged += new System.EventHandler(this.OnChanged);
       // 
       // btnRestartService
       // 
@@ -178,7 +169,7 @@ namespace rdpWrapper {
       this.btnRestartService.Margin = new System.Windows.Forms.Padding(2);
       this.btnRestartService.Name = "btnRestartService";
       this.btnRestartService.Size = new System.Drawing.Size(67, 23);
-      this.btnRestartService.TabIndex = 0;
+      this.btnRestartService.TabIndex = 3;
       this.btnRestartService.Text = "Restart";
       this.btnRestartService.Click += new System.EventHandler(this.btnRestartService_Click);
       // 
@@ -226,7 +217,6 @@ namespace rdpWrapper {
       // 
       // gbxStatus
       // 
-      this.gbxStatus.Controls.Add(this.btnUninstall);
       this.gbxStatus.Controls.Add(this.btnRestartService);
       this.gbxStatus.Controls.Add(this.btnInstall);
       this.gbxStatus.Controls.Add(this.btnGenerate);
@@ -249,18 +239,6 @@ namespace rdpWrapper {
       this.gbxStatus.TabStop = false;
       this.gbxStatus.Text = "Diagnostics";
       // 
-      // btnUninstall
-      // 
-      this.btnUninstall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.btnUninstall.Location = new System.Drawing.Point(301, 36);
-      this.btnUninstall.Margin = new System.Windows.Forms.Padding(2);
-      this.btnUninstall.Name = "btnUninstall";
-      this.btnUninstall.Size = new System.Drawing.Size(67, 23);
-      this.btnUninstall.TabIndex = 1;
-      this.btnUninstall.Text = "Uninstall";
-      this.btnUninstall.Visible = false;
-      this.btnUninstall.Click += new System.EventHandler(this.btnUninstall_Click);
-      // 
       // btnInstall
       // 
       this.btnInstall.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -268,7 +246,7 @@ namespace rdpWrapper {
       this.btnInstall.Margin = new System.Windows.Forms.Padding(2);
       this.btnInstall.Name = "btnInstall";
       this.btnInstall.Size = new System.Drawing.Size(67, 23);
-      this.btnInstall.TabIndex = 10;
+      this.btnInstall.TabIndex = 7;
       this.btnInstall.Text = "Install";
       this.btnInstall.Visible = false;
       this.btnInstall.Click += new System.EventHandler(this.btnInstall_Click);
@@ -280,7 +258,7 @@ namespace rdpWrapper {
       this.btnGenerate.Margin = new System.Windows.Forms.Padding(2);
       this.btnGenerate.Name = "btnGenerate";
       this.btnGenerate.Size = new System.Drawing.Size(67, 23);
-      this.btnGenerate.TabIndex = 2;
+      this.btnGenerate.TabIndex = 11;
       this.btnGenerate.Text = "Generate";
       this.btnGenerate.Click += new System.EventHandler(this.btnGenerate_Click);
       // 
@@ -295,7 +273,7 @@ namespace rdpWrapper {
       this.txtServiceVersion.Name = "txtServiceVersion";
       this.txtServiceVersion.ReadOnly = true;
       this.txtServiceVersion.Size = new System.Drawing.Size(112, 13);
-      this.txtServiceVersion.TabIndex = 3;
+      this.txtServiceVersion.TabIndex = 2;
       this.txtServiceVersion.TabStop = false;
       // 
       // lblSupported
@@ -307,7 +285,7 @@ namespace rdpWrapper {
       this.lblSupported.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
       this.lblSupported.Name = "lblSupported";
       this.lblSupported.Size = new System.Drawing.Size(93, 13);
-      this.lblSupported.TabIndex = 8;
+      this.lblSupported.TabIndex = 10;
       this.lblSupported.Text = "[not supported]";
       // 
       // lblListenerStateValue
@@ -319,7 +297,7 @@ namespace rdpWrapper {
       this.lblListenerStateValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
       this.lblListenerStateValue.Name = "lblListenerStateValue";
       this.lblListenerStateValue.Size = new System.Drawing.Size(60, 13);
-      this.lblListenerStateValue.TabIndex = 7;
+      this.lblListenerStateValue.TabIndex = 9;
       this.lblListenerStateValue.Text = "Unknown";
       // 
       // lblServiceStateValue
@@ -342,7 +320,7 @@ namespace rdpWrapper {
       this.lblWrapperVersion.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
       this.lblWrapperVersion.Name = "lblWrapperVersion";
       this.lblWrapperVersion.Size = new System.Drawing.Size(47, 13);
-      this.lblWrapperVersion.TabIndex = 5;
+      this.lblWrapperVersion.TabIndex = 6;
       this.lblWrapperVersion.Text = "1.0.0.0";
       // 
       // lblWrapperStateValue
@@ -354,7 +332,7 @@ namespace rdpWrapper {
       this.lblWrapperStateValue.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
       this.lblWrapperStateValue.Name = "lblWrapperStateValue";
       this.lblWrapperStateValue.Size = new System.Drawing.Size(60, 13);
-      this.lblWrapperStateValue.TabIndex = 4;
+      this.lblWrapperStateValue.TabIndex = 5;
       this.lblWrapperStateValue.Text = "Unknown";
       // 
       // lblListenerState
@@ -364,7 +342,7 @@ namespace rdpWrapper {
       this.lblListenerState.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
       this.lblListenerState.Name = "lblListenerState";
       this.lblListenerState.Size = new System.Drawing.Size(73, 13);
-      this.lblListenerState.TabIndex = 6;
+      this.lblListenerState.TabIndex = 8;
       this.lblListenerState.Text = "Listener state:";
       // 
       // lblServiceState
@@ -384,7 +362,7 @@ namespace rdpWrapper {
       this.lblWrapperState.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
       this.lblWrapperState.Name = "lblWrapperState";
       this.lblWrapperState.Size = new System.Drawing.Size(77, 13);
-      this.lblWrapperState.TabIndex = 3;
+      this.lblWrapperState.TabIndex = 4;
       this.lblWrapperState.Text = "Wrapper state:";
       // 
       // txtLog
@@ -394,7 +372,7 @@ namespace rdpWrapper {
       this.txtLog.Margin = new System.Windows.Forms.Padding(2);
       this.txtLog.Name = "txtLog";
       this.txtLog.ReadOnly = true;
-      this.txtLog.Size = new System.Drawing.Size(374, 2);
+      this.txtLog.Size = new System.Drawing.Size(374, 118);
       this.txtLog.TabIndex = 0;
       this.txtLog.Text = "";
       // 
@@ -414,7 +392,6 @@ namespace rdpWrapper {
       // 
       this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.testToolStripMenuItem,
-            this.btnApply,
             this.toolStripMenuItem2,
             this.exitToolStripMenuItem});
       this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -425,28 +402,20 @@ namespace rdpWrapper {
       // 
       this.testToolStripMenuItem.Name = "testToolStripMenuItem";
       this.testToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.T)));
-      this.testToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
+      this.testToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
       this.testToolStripMenuItem.Text = "Test";
       this.testToolStripMenuItem.Click += new System.EventHandler(this.btnTest_Click);
-      // 
-      // btnApply
-      // 
-      this.btnApply.Name = "btnApply";
-      this.btnApply.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-      this.btnApply.Size = new System.Drawing.Size(145, 22);
-      this.btnApply.Text = "Apply";
-      this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
       // 
       // toolStripMenuItem2
       // 
       this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-      this.toolStripMenuItem2.Size = new System.Drawing.Size(142, 6);
+      this.toolStripMenuItem2.Size = new System.Drawing.Size(135, 6);
       // 
       // exitToolStripMenuItem
       // 
       this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
       this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.W)));
-      this.exitToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
+      this.exitToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
       this.exitToolStripMenuItem.Text = "Exit";
       this.exitToolStripMenuItem.Click += new System.EventHandler(this.btnClose_Click);
       // 
@@ -476,7 +445,7 @@ namespace rdpWrapper {
       this.uninstallMenuItem.Name = "uninstallMenuItem";
       this.uninstallMenuItem.Size = new System.Drawing.Size(172, 22);
       this.uninstallMenuItem.Text = "Uninstall";
-      this.uninstallMenuItem.Click += new System.EventHandler(this.btnUninstall_Click);
+      this.uninstallMenuItem.Click += new System.EventHandler(this.btnInstall_Click);
       // 
       // generateMenuItem
       // 
@@ -556,7 +525,7 @@ namespace rdpWrapper {
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.ClientSize = new System.Drawing.Size(374, 236);
+      this.ClientSize = new System.Drawing.Size(374, 352);
       this.Controls.Add(this.txtLog);
       this.Controls.Add(this.gbxGeneralSettings);
       this.Controls.Add(this.gbxStatus);
@@ -569,7 +538,6 @@ namespace rdpWrapper {
       this.Name = "MainForm";
       this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
       this.Text = "RDP Wrapper";
-      this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
       ((System.ComponentModel.ISupportInitialize)(this.seRDPPort)).EndInit();
       this.gbxGeneralSettings.ResumeLayout(false);
       this.gbxGeneralSettings.PerformLayout();
@@ -608,7 +576,6 @@ namespace rdpWrapper {
     private Button btnGenerate;
     private sergiye.Common.SimplTextBox txtLog;
     private Button btnInstall;
-    private Button btnUninstall;
     private MenuStrip mainMenu;
     private ToolStripMenuItem fileToolStripMenuItem;
     private ToolStripSeparator toolStripMenuItem2;
@@ -623,7 +590,6 @@ namespace rdpWrapper {
     private ToolStripSeparator toolStripMenuItem3;
     private ToolStripMenuItem themeMenuItem;
     private ToolStripMenuItem showLogToolStripMenuItem;
-    private ToolStripMenuItem btnApply;
     private ToolStripMenuItem installMenuItem;
     private ToolStripMenuItem uninstallMenuItem;
     private ToolStripMenuItem generateMenuItem;

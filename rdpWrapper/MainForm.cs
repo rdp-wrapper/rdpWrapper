@@ -27,7 +27,11 @@ namespace rdpWrapper {
       InitializeComponent();
 
       Icon = Icon.ExtractAssociatedIcon(typeof(MainForm).Assembly.Location);
-      var title =$"{Updater.ApplicationTitle} v{Updater.CurrentVersion} {(Environment.Is64BitProcess ? "x64" : "x86")}";
+      var appArch = Environment.Is64BitProcess ? "x64" : "x86";
+      var sysArch = Environment.Is64BitOperatingSystem ? "x64" : "x86";
+      var title = $"{Updater.ApplicationTitle} v{Updater.CurrentVersion} {appArch}";
+      if (appArch != sysArch)
+        title += "/" + sysArch;
       Text = title;
 
       settings = new PersistentSettings();
@@ -37,7 +41,7 @@ namespace rdpWrapper {
       var sizeSpan = Height - ClientSize.Height;
       MinimumSize = new Size { Width = Width, Height = sizeSpan + gbxGeneralSettings.Height + gbxStatus.Height + mainMenu.Height };
 
-      var showLog = new UserOption("showLog", false, showLogToolStripMenuItem, settings);
+      var showLog = new UserOption("showLog", true, showLogToolStripMenuItem, settings);
       showLog.Changed += delegate {
         showLogToolStripMenuItem.Checked = showLog.Value;
         if (showLogToolStripMenuItem.Checked) {
@@ -71,13 +75,48 @@ namespace rdpWrapper {
         "View only without permission"
       ]);
 
-      Load += (sender, e) => { 
-        RefreshSystemSettings();
-      };
-
       refreshTimer = new Timer();
       refreshTimer.Tick += TimerTick;
       refreshTimer.Interval = 1000;
+
+      Load += (sender, e) => { 
+        RefreshSystemSettings();
+        TimerTick(null, EventArgs.Empty);
+        refreshTimer.Enabled = true;
+
+        cbxSingleSessionPerUser.CheckedChanged += (s, e) => { wrapper.SingleSessionPerUser = cbxSingleSessionPerUser.Checked; };
+        cbxAllowTSConnections.CheckedChanged += (s, e) => { wrapper.AllowTsConnections = cbxAllowTSConnections.Checked; };
+        cbDontDisplayLastUser.CheckedChanged += (s, e) => { wrapper.DontDisplayLastUser = cbDontDisplayLastUser.Checked; };
+        rgShadowOptions.SelectedIndexChanged += (s, e) => { wrapper.ShadowOptions = rgShadowOptions.SelectedIndex; };
+        cbxHonorLegacy.CheckedChanged += (s, e) => { wrapper.HonorLegacy = cbxHonorLegacy.Checked; };
+
+        seRDPPort.ValueChanged += (s, e) => {
+          var newPort = (int)seRDPPort.Value;
+          if (oldPort != newPort) {
+            var p = Wrapper.StartProcess("netsh", $"advfirewall firewall set rule name=\"Remote Desktop\" new localport={newPort}");
+            p.WaitForExit();
+            logger.Log($"Firewall rule added for port {newPort}", Logger.StateKind.Info);
+            oldPort = wrapper.RdpPort = newPort;
+          }
+        };
+
+        rgNLAOptions.SelectedIndexChanged += (s, e) => {
+          switch (rgNLAOptions.SelectedIndex) {
+            case 0:
+              wrapper.UserAuthentication = 0;
+              wrapper.SecurityLayer = 0;
+              break;
+            case 1:
+              wrapper.UserAuthentication = 0;
+              wrapper.SecurityLayer = 1;
+              break;
+            case 2:
+              wrapper.UserAuthentication = 1;
+              wrapper.SecurityLayer = 2;
+              break;
+          }
+        };
+      };
 
       Updater.Subscribe(
         (message, isError) => {
@@ -130,25 +169,16 @@ namespace rdpWrapper {
         cbDontDisplayLastUser.Checked = wrapper.DontDisplayLastUser;
 
         logger.Log(" Done", Logger.StateKind.Info, false);
-        TimerTick(null, EventArgs.Empty);
-        refreshTimer.Enabled = true;
       }
       catch (Exception ex) {
         var message = "Error loading settings: " + ex.Message;
         logger.Log(message, Logger.StateKind.Error);
         //MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
-      btnApply.Enabled = false;
     }
 
     private void btnClose_Click(object sender, EventArgs e) {
       Close();
-    }
-
-    private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
-      if (btnApply.Enabled && MessageBox.Show("Settings are not saved. Do you want to exit?", Updater.ApplicationTitle, MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel) {
-        e.Cancel = true;
-      }
     }
 
     private void InitializeTheme() {
@@ -165,7 +195,10 @@ namespace rdpWrapper {
         themeMenuItem.DropDownItems.Add(autoThemeMenuItem);
       }
 
-      var allThemes = CustomTheme.GetAllThemes();
+      var allThemes = Debugger.IsAttached 
+        ? CustomTheme.GetAllThemes(".\\..\\..\\themes")
+        : CustomTheme.GetAllThemes();
+
       var setTheme = allThemes.FirstOrDefault(theme => settings.GetValue("theme", "auto") == theme.Id);
       if (setTheme != null) {
         Theme.Current = setTheme;
@@ -204,54 +237,6 @@ namespace rdpWrapper {
       settings.SetValue("theme", theme.Id);
     }
 
-    private void btnApply_Click(object sender, EventArgs e) {
-      
-      try {
-        wrapper.SingleSessionPerUser = cbxSingleSessionPerUser.Checked;
-        wrapper.AllowTsConnections = cbxAllowTSConnections.Checked;
-        wrapper.HonorLegacy = cbxHonorLegacy.Checked;
-        
-        var newPort = (int)seRDPPort.Value;
-        if (oldPort != newPort) {
-          var p = Wrapper.StartProcess("netsh", $"advfirewall firewall set rule name=\"Remote Desktop\" new localport={newPort}");
-          p.WaitForExit();
-          logger.Log($"Firewall rule added for port {newPort}", Logger.StateKind.Info);
-        }
-
-        oldPort = wrapper.RdpPort = newPort;
-        switch (rgNLAOptions.SelectedIndex) {
-          case 0:
-            wrapper.UserAuthentication = 0;
-            wrapper.SecurityLayer = 0;
-            break;
-          case 1:
-            wrapper.UserAuthentication = 0;
-            wrapper.SecurityLayer = 1;
-            break;
-          case 2:
-            wrapper.UserAuthentication = 1;
-            wrapper.SecurityLayer = 2;
-            break;
-        }
-        wrapper.ShadowOptions = rgShadowOptions.SelectedIndex;
-        wrapper.DontDisplayLastUser = cbDontDisplayLastUser.Checked;
-
-        wrapper.SaveSettings();
-        
-        btnApply.Enabled = false;
-        logger.Log("Settings applied", Logger.StateKind.Info);
-      }
-      catch (Exception ex) {
-        var message = "Failed to apply settings: " + ex.Message;
-        logger.Log(message, Logger.StateKind.Error);
-        MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
-      }
-    }
-
-    private void OnChanged(object sender, EventArgs e) {
-      btnApply.Enabled = true;
-    }
-
     private void btnRestartService_Click(object sender, EventArgs e) {
       try {
         SetControlsState(false);
@@ -277,14 +262,14 @@ namespace rdpWrapper {
         case WrapperInstalledState.Unknown:
           lblWrapperStateValue.Text = "Unknown";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
-          installMenuItem.Enabled = btnInstall.Visible = false;
-          uninstallMenuItem.Enabled = btnUninstall.Visible = false;
+          uninstallMenuItem.Enabled = installMenuItem.Enabled = btnInstall.Enabled = btnInstall.Visible = false;
           break;
         case WrapperInstalledState.NotInstalled:
           lblWrapperStateValue.Text = "Not installed";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
-          installMenuItem.Enabled = btnInstall.Visible = true;
-          uninstallMenuItem.Enabled = btnUninstall.Visible = false;
+          installMenuItem.Enabled = btnInstall.Enabled = btnInstall.Visible = true;
+          uninstallMenuItem.Enabled = false;
+          btnInstall.Text = "Install";
           break;
         case WrapperInstalledState.RdpWrap:
           lblWrapperStateValue.Text = "RdpWrap";
@@ -301,15 +286,14 @@ namespace rdpWrapper {
             wrapperIniLastPath = wrapperIniPath;
             wrapperIniLastChecked = DateTime.MinValue;
           }
-          lblWrapperVersion.Visible = true;
-          installMenuItem.Enabled = btnInstall.Visible = false;
-          uninstallMenuItem.Enabled = btnUninstall.Visible = true;
+          installMenuItem.Enabled = false;
+          uninstallMenuItem.Enabled = btnInstall.Enabled = btnInstall.Visible = true;
+          btnInstall.Text = "Uninstall";
           break;
         case WrapperInstalledState.ThirdParty:
           lblWrapperStateValue.Text = "3rd-party";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusErrorColor;
-          installMenuItem.Enabled = btnInstall.Visible = false;
-          uninstallMenuItem.Enabled = btnUninstall.Visible = false;
+          uninstallMenuItem.Enabled = installMenuItem.Enabled = btnInstall.Enabled = btnInstall.Visible = false;
           break;
         case WrapperInstalledState.TermWrap:
           lblWrapperStateValue.Text = "TermWrap";
@@ -317,9 +301,9 @@ namespace rdpWrapper {
           checkSupported = null;
           wrapperIniLastChecked = DateTime.MinValue;
           wrapperIniLastPath = null;
-          lblWrapperVersion.Visible = false;
-          installMenuItem.Enabled = btnInstall.Visible = false;
-          uninstallMenuItem.Enabled = btnUninstall.Visible = true;
+          installMenuItem.Enabled = false;
+          uninstallMenuItem.Enabled = btnInstall.Enabled = btnInstall.Visible = true;
+          btnInstall.Text = "Uninstall";
           break;
       }
 
@@ -389,7 +373,7 @@ namespace rdpWrapper {
 #if LITEVERSION
         btnGenerate.Visible = false;
 #else
-        generateMenuItem.Enabled = btnGenerate.Visible = wrapperInstalled == WrapperInstalledState.RdpWrap;
+        generateMenuItem.Enabled = btnGenerate.Enabled = btnGenerate.Visible = wrapperInstalled == WrapperInstalledState.RdpWrap;
 #endif
         lblSupported.Visible = checkSupported is true;
         if (checkSupported is true) {
@@ -468,48 +452,34 @@ namespace rdpWrapper {
     }
 
     private void btnInstall_Click(object sender, EventArgs e) {
-
+      
+      var operation = btnInstall.Text;
+      SetControlsState(false);
       try {
-        SetControlsState(false);
+        if (operation == "Install") {
 #if LITEVERSION
         wrapper.Install();
 #else
-        var answer = MessageBox.Show("Choose:\n'Yes' - to install 'TermWrap'\n'No' - to install 'RdpWrap'\n'Cancel' - if you are not a confident person", Updater.ApplicationTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-        switch (answer) {
-          case DialogResult.Yes:
-            wrapper.Install(true);
-            break;
-          case DialogResult.No:
-            wrapper.Install(false);
-            break;
-          default:
-            return;
-        }
+          var answer = MessageBox.Show("Choose:\n'Yes' - to install 'TermWrap'\n'No' - to install 'RdpWrap'\n'Cancel' - if you are not a confident person", Updater.ApplicationTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+          switch (answer) {
+            case DialogResult.Yes:
+              wrapper.Install(true);
+              break;
+            case DialogResult.No:
+              wrapper.Install(false);
+              break;
+            default:
+              return;
+          }
 #endif
-        //cbxAllowTSConnections.Checked = true;
-        //btnApply.PerformClick();
-        //btnRestartService.PerformClick();
+          //btnRestartService.PerformClick();
+        }
+        else {
+          wrapper.Uninstall();
+        }
       }
       catch (Exception ex) {
-        var message = "Failed to Install: " + ex.Message;
-        logger.Log(message, Logger.StateKind.Error);
-        MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
-      }
-      finally {
-        SetControlsState(true);
-      }
-    }
-
-    private void btnUninstall_Click(object sender, EventArgs e) {
-      try {
-        SetControlsState(false);
-        wrapper.Uninstall();
-        
-        //cbxAllowTSConnections.Checked = false;
-        //btnApply.PerformClick();
-      }
-      catch (Exception ex) {
-        var message = "Failed to Install: " + ex.Message;
+        var message = $"Failed to {operation}: {ex.Message}";
         logger.Log(message, Logger.StateKind.Error);
         MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
@@ -520,10 +490,11 @@ namespace rdpWrapper {
 
     private void SetControlsState(bool enabled) {
       refreshTimer.Enabled = enabled;
-      btnInstall.Enabled = installMenuItem.Enabled = enabled;
-      btnUninstall.Enabled = uninstallMenuItem.Enabled = enabled;
+      if (!enabled) {
+        btnInstall.Enabled = installMenuItem.Enabled = uninstallMenuItem.Enabled = enabled;
+        btnGenerate.Enabled = generateMenuItem.Enabled = enabled;
+      }
       btnRestartService.Enabled = restartServiceMenuItem.Enabled = enabled;
-      btnGenerate.Enabled = generateMenuItem.Enabled = enabled;
     }
   }
 }

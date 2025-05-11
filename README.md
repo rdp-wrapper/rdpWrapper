@@ -52,7 +52,7 @@ Don't forget to restart the app to scan for new theme files!
 
 ## Download
 
-The published version can be obtained from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).**
+The published version can be obtained from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).
 
 ## How can I help improve it?
 The rdpWrapper team welcomes feedback and contributions!<br/>
