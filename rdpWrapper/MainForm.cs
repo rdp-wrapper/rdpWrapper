@@ -155,22 +155,22 @@ namespace rdpWrapper {
         themeMenuItem.DropDownItems.Add(autoThemeMenuItem);
       }
 
-      AddThemeMenuItems(Theme.All.Where(t => t is not CustomTheme));
-      var customThemes = Theme.All.Where(t => t is CustomTheme).ToList();
+      var allThemes = CustomTheme.GetAllThemes();
+      var setTheme = allThemes.FirstOrDefault(theme => settings.GetValue("theme", "auto") == theme.Id);
+      if (setTheme != null) {
+        Theme.Current = setTheme;
+        Theme.Current.Apply(this);
+      }
+
+      AddThemeMenuItems(allThemes.Where(t => t is not CustomTheme));
+      var customThemes = allThemes.Where(t => t is CustomTheme).ToList();
       if (customThemes.Count > 0) {
         themeMenuItem.DropDownItems.Add("-");
         AddThemeMenuItems(customThemes);
       }
 
-      var setTheme = Theme.All.FirstOrDefault(theme => settings.GetValue("theme", "auto") == theme.Id);
-      if (setTheme != null) {
-        Theme.Current = setTheme;
-        Theme.Current.Apply(this);
-      }
-      else {
-        if (themeMenuItem.DropDownItems.Count > 0)
-          themeMenuItem.DropDownItems[0].PerformClick();
-      }
+      if (setTheme == null && themeMenuItem.DropDownItems.Count > 0)
+        themeMenuItem.DropDownItems[0].PerformClick();
     }
 
     private void AddThemeMenuItems(IEnumerable<Theme> themes) {
