@@ -52,12 +52,7 @@ Don't forget to restart the app to scan for new theme files!
 
 ## Download
 
-**The recommended way to get the program is BUILD from source**
-- Install git, Visual Studio
-- `git clone https://github.com/rdp-wrapper/rdpWrapper.git`
-- build
-
-**or download build from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).**
+The published version can be obtained from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).**
 
 ## How can I help improve it?
 The rdpWrapper team welcomes feedback and contributions!<br/>
