@@ -1,0 +1,11 @@
+{
+    "DisplayName": "Plum",
+    "DarkMode": true,
+    "BackgroundColor": "#3C3C3C",
+    "ForegroundColor": "#E9E9E9",
+    "HyperlinkColor": "#90DCE8",
+    "SelectedBackgroundColor": "#8B008B",
+    "SelectedForegroundColor": "#E9E9E9",
+    "LineColor": "#404040",
+    "StrongLineColor": "#454545"
+}

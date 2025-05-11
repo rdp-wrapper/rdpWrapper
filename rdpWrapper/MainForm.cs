@@ -1,9 +1,10 @@
 ﻿using sergiye.Common;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.ServiceProcess;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
@@ -12,12 +13,6 @@ namespace rdpWrapper {
 
   internal partial class MainForm : Form {
 
-    private const int MfSeparator = 0x00000800;
-    private const int MfByPosition = 0x400;
-    private const int MfWmSysCommand = 0x112;
-    private const int MfSysMenuCheckUpdates = 1000;
-    private const int MfSysMenuAboutId = 1001;
-
     private int oldPort;
     private string wrapperIniLastPath;
     private DateTime wrapperIniLastChecked = DateTime.MinValue;
@@ -25,6 +20,7 @@ namespace rdpWrapper {
     private readonly Timer refreshTimer;
     private readonly Logger logger;
     private readonly Wrapper wrapper;
+    private readonly PersistentSettings settings;
 
     public MainForm() {
 
@@ -34,12 +30,33 @@ namespace rdpWrapper {
       var title =$"{Updater.ApplicationTitle} v{Updater.CurrentVersion} {(Environment.Is64BitProcess ? "x64" : "x86")}";
       Text = title;
 
+      settings = new PersistentSettings();
+      settings.Load();
+      InitializeTheme();
+
+      var sizeSpan = Height - ClientSize.Height;
+      MinimumSize = new Size { Width = Width, Height = sizeSpan + gbxGeneralSettings.Height + gbxStatus.Height + mainMenu.Height };
+
+      var showLog = new UserOption("showLog", false, showLogToolStripMenuItem, settings);
+      showLog.Changed += delegate {
+        showLogToolStripMenuItem.Checked = showLog.Value;
+        if (showLogToolStripMenuItem.Checked) {
+          FormBorderStyle = FormBorderStyle.Sizable;
+          txtLog.Visible = true;
+          Height = sizeSpan + gbxGeneralSettings.Height + gbxStatus.Height + 100 + mainMenu.Height;
+        }
+        else {
+          FormBorderStyle = FormBorderStyle.FixedDialog;
+          Height = sizeSpan + gbxGeneralSettings.Height + gbxStatus.Height + mainMenu.Height;
+          txtLog.Visible = false;
+        }
+      };
+
       logger = new Logger();
       logger.OnNewLogEvent += AddToLog;
       logger.Log($"Application started: {title}", Logger.StateKind.Info, false);
       
       wrapper = new Wrapper(logger);
-      wrapper.OnError += message => MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error); 
       
       rgNLAOptions.Items.AddRange([
         "GUI Authentication Only", 
@@ -54,16 +71,9 @@ namespace rdpWrapper {
         "View only without permission"
       ]);
 
-      var menuHandle = GetSystemMenu(Handle, false); // Note: to restore default set true
-      InsertMenu(menuHandle, 5, MfByPosition | MfSeparator, 0, string.Empty); // <-- Add a menu separator
-      InsertMenu(menuHandle, 6, MfByPosition, MfSysMenuCheckUpdates, "Check for new version");
-      InsertMenu(menuHandle, 7, MfByPosition, MfSysMenuAboutId, "&About…");
-
-      Load += MainFormLoad;
-
-      Theme.SetAutoTheme();
-      Theme.Current.Apply(this);
-      btnTheme.Text = Theme.Current.DisplayName;
+      Load += (sender, e) => { 
+        RefreshSystemSettings();
+      };
 
       refreshTimer = new Timer();
       refreshTimer.Tick += TimerTick;
@@ -72,39 +82,25 @@ namespace rdpWrapper {
       var timer = new Timer();
       timer.Tick += async (_, _) => {
         timer.Enabled = false;
-        timer.Enabled = !await Updater.CheckForUpdatesAsync(true).ConfigureAwait(false);
+        timer.Enabled = !await Updater.CheckForUpdatesAsync(true);
       };
       timer.Interval = 3000;
       timer.Enabled = true;
     }
 
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
-    [DllImport("user32.dll")]
-    private static extern bool InsertMenu(IntPtr hMenu, int wPosition, int wFlags, int wIdNewItem, string lpNewItem);
-    
-    protected override void WndProc(ref Message m) {
-
-      base.WndProc(ref m);
-      
-      if (m.Msg != MfWmSysCommand)
-        return;
-      
-      switch ((int)m.WParam) {
-        case MfSysMenuAboutId:
-          var asm = GetType().Assembly;
-          if (MessageBox.Show($"{Updater.ApplicationTitle} {asm.GetName().Version.ToString(3)} {(Environment.Is64BitProcess ? "x64" : "x32")}\nWritten by Sergiy Egoshyn (egoshin.sergey@gmail.com)\nDo you want to know more?", Updater.ApplicationTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) {
-            Process.Start($"https://github.com/{Updater.ApplicationCompany}/{Updater.ApplicationName}");
-          }
-          break;
-        case MfSysMenuCheckUpdates:
-          Updater.CheckForUpdates(false);
-          break;
-      }
+    private void checkFoNewVersionToolStripMenuItem_Click(object sender, EventArgs e) {
+      Updater.CheckForUpdates(false);
     }
 
-    private void MainFormLoad(object sender, EventArgs e) {
-      
+    private void siteToolStripMenuItem_Click(object sender, EventArgs e) {
+      Updater.VisitAppSite();
+    }
+
+    private void aboutToolStripMenuItem_Click(object sender, EventArgs e) {
+      MessageBox.Show($"{Updater.ApplicationTitle} {Updater.CurrentVersion} {(Environment.Is64BitProcess ? "x64" : "x32")}\nWritten by Sergiy Egoshyn (egoshin.sergey@gmail.com)", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void RefreshSystemSettings() {
       try {
         logger.Log("Retrieving system configuration...");
 
@@ -130,7 +126,7 @@ namespace rdpWrapper {
       catch (Exception ex) {
         var message = "Error loading settings: " + ex.Message;
         logger.Log(message, Logger.StateKind.Error);
-        MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
       btnApply.Enabled = false;
     }
@@ -140,20 +136,62 @@ namespace rdpWrapper {
     }
 
     private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
-      if (btnApply.Enabled && MessageBox.Show("Settings are not saved. Do you want to exit?", Updater.ApplicationTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No) {
+      if (btnApply.Enabled && MessageBox.Show("Settings are not saved. Do you want to exit?", Updater.ApplicationTitle, MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel) {
         e.Cancel = true;
       }
     }
 
-    private void btnTheme_Click(object sender, EventArgs e) {
+    private void InitializeTheme() {
 
-      if (Theme.Current.DisplayName == "Light") {
-        Theme.Current = new DarkTheme();
+      mainMenu.Renderer = new ThemedToolStripRenderer();
+
+      if (Theme.SupportsAutoThemeSwitching()) {
+        var autoThemeMenuItem = new ToolStripRadioButtonMenuItem("Auto");
+        autoThemeMenuItem.Click += (o, e) => {
+          autoThemeMenuItem.Checked = true;
+          Theme.SetAutoTheme();
+          settings.SetValue("theme", "auto");
+        };
+        themeMenuItem.DropDownItems.Add(autoThemeMenuItem);
       }
-      else {
-        Theme.Current = new LightTheme();
+
+      var allThemes = CustomTheme.GetAllThemes();
+      var setTheme = allThemes.FirstOrDefault(theme => settings.GetValue("theme", "auto") == theme.Id);
+      if (setTheme != null) {
+        Theme.Current = setTheme;
+        Theme.Current.Apply(this);
       }
-      btnTheme.Text = Theme.Current.DisplayName;
+
+      AddThemeMenuItems(allThemes.Where(t => t is not CustomTheme));
+      var customThemes = allThemes.Where(t => t is CustomTheme).ToList();
+      if (customThemes.Count > 0) {
+        themeMenuItem.DropDownItems.Add("-");
+        AddThemeMenuItems(customThemes);
+      }
+
+      if (setTheme == null && themeMenuItem.DropDownItems.Count > 0)
+        themeMenuItem.DropDownItems[0].PerformClick();
+    }
+
+    private void AddThemeMenuItems(IEnumerable<Theme> themes) {
+      foreach (var theme in themes) {
+        var item = new ToolStripRadioButtonMenuItem(theme.DisplayName);
+        item.Tag = theme;
+        item.Click += OnThemeMenuItemClick;
+        themeMenuItem.DropDownItems.Add(item);
+
+        if (Theme.Current != null && Theme.Current.Id == theme.Id) {
+          item.Checked = true;
+        }
+      }
+    }
+
+    private void OnThemeMenuItemClick(object sender, EventArgs e) {
+      if (sender is not ToolStripRadioButtonMenuItem item || item.Tag is not Theme theme)
+        return;
+      item.Checked = true;
+      Theme.Current = theme;
+      settings.SetValue("theme", theme.Id);
     }
 
     private void btnApply_Click(object sender, EventArgs e) {
@@ -206,7 +244,7 @@ namespace rdpWrapper {
 
     private void btnRestartService_Click(object sender, EventArgs e) {
       try {
-        btnRestartService.Enabled = false;
+        SetControlsState(false);
         //todo: async
         wrapper.StopService(TimeSpan.FromSeconds(10));
         wrapper.StartService(TimeSpan.FromSeconds(10));
@@ -217,29 +255,29 @@ namespace rdpWrapper {
         MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
       finally {
-        btnRestartService.Enabled = true;
+        SetControlsState(true);
       }
     }
 
     private void TimerTick(object sender, EventArgs e) {
 
-      var checkSupported = false;
+      bool? checkSupported = false;
       var wrapperInstalled = wrapper.CheckWrapperInstalled();
       switch (wrapperInstalled) {
-        case -1:
+        case WrapperInstalledState.Unknown:
           lblWrapperStateValue.Text = "Unknown";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
-          btnInstall.Visible = false;
-          btnUninstall.Visible = false;
+          installMenuItem.Enabled = btnInstall.Visible = false;
+          uninstallMenuItem.Enabled = btnUninstall.Visible = false;
           break;
-        case 0:
+        case WrapperInstalledState.NotInstalled:
           lblWrapperStateValue.Text = "Not installed";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
-          btnInstall.Visible = true;
-          btnUninstall.Visible = false;
+          installMenuItem.Enabled = btnInstall.Visible = true;
+          uninstallMenuItem.Enabled = btnUninstall.Visible = false;
           break;
-        case 1:
-          lblWrapperStateValue.Text = "Installed";
+        case WrapperInstalledState.RdpWrap:
+          lblWrapperStateValue.Text = "RdpWrap";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusOkColor;
           string wrapperIniPath = null;
           if (!string.IsNullOrEmpty(wrapper.WrapperPath)) {
@@ -253,14 +291,25 @@ namespace rdpWrapper {
             wrapperIniLastPath = wrapperIniPath;
             wrapperIniLastChecked = DateTime.MinValue;
           }
-          btnInstall.Visible = false;
-          btnUninstall.Visible = true;
+          lblWrapperVersion.Visible = true;
+          installMenuItem.Enabled = btnInstall.Visible = false;
+          uninstallMenuItem.Enabled = btnUninstall.Visible = true;
           break;
-        case 2:
+        case WrapperInstalledState.ThirdParty:
           lblWrapperStateValue.Text = "3rd-party";
           lblWrapperStateValue.ForeColor = Theme.Current.StatusErrorColor;
-          btnInstall.Visible = false;
-          btnUninstall.Visible = false;
+          installMenuItem.Enabled = btnInstall.Visible = false;
+          uninstallMenuItem.Enabled = btnUninstall.Visible = false;
+          break;
+        case WrapperInstalledState.TermWrap:
+          lblWrapperStateValue.Text = "TermWrap";
+          lblWrapperStateValue.ForeColor = Theme.Current.StatusOkColor;
+          checkSupported = null;
+          wrapperIniLastChecked = DateTime.MinValue;
+          wrapperIniLastPath = null;
+          lblWrapperVersion.Visible = false;
+          installMenuItem.Enabled = btnInstall.Visible = false;
+          uninstallMenuItem.Enabled = btnUninstall.Visible = true;
           break;
       }
 
@@ -327,9 +376,13 @@ namespace rdpWrapper {
         txtServiceVersion.Text = Wrapper.GetVersionString(versionInfo);
         txtServiceVersion.ForeColor = Theme.Current.ForegroundColor;
 
-        btnGenerate.Enabled = wrapperInstalled == 1;
-        lblSupported.Visible = checkSupported;
-        if (checkSupported) {
+#if LITEVERSION
+        btnGenerate.Visible = false;
+#else
+        generateMenuItem.Enabled = btnGenerate.Visible = wrapperInstalled == WrapperInstalledState.RdpWrap;
+#endif
+        lblSupported.Visible = checkSupported is true;
+        if (checkSupported is true) {
           if (versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 0 ||
               versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 1) {
             lblSupported.Text = "[supported partially]";
@@ -351,6 +404,10 @@ namespace rdpWrapper {
           lblSupported.Text = "[not supported]";
           lblSupported.ForeColor = Theme.Current.StatusErrorColor;
         }
+        else if (!checkSupported.HasValue) {
+          lblSupported.Text = "[supported]";
+          lblSupported.ForeColor = Theme.Current.StatusOkColor;
+        }
       }
     }
 
@@ -360,11 +417,17 @@ namespace rdpWrapper {
 
     private void btnGenerate_Click(object sender, EventArgs e) {
       try {
-        btnGenerate.Enabled = false;
-        wrapper.GenerateIniFile(wrapperIniLastPath);
+        SetControlsState(false);
+#if LITEVERSION
+        MessageBox.Show("No need for Ini file with TermWrap.", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+#else
+        wrapper.GenerateIniFile(wrapperIniLastPath, true, (message) =>
+          MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error)
+        );
+#endif
       }
       finally {
-        btnGenerate.Enabled = true;
+        SetControlsState(true);
       }
     }
 
@@ -397,12 +460,25 @@ namespace rdpWrapper {
     private void btnInstall_Click(object sender, EventArgs e) {
 
       try {
-        btnInstall.Enabled = false;
+        SetControlsState(false);
+#if LITEVERSION
         wrapper.Install();
-
-        //todo: Thread.Sleep(1000); 
-        cbxAllowTSConnections.Checked = true;
-        btnApply.PerformClick();
+#else
+        var answer = MessageBox.Show("Choose:\n'Yes' - to install 'TermWrap'\n'No' - to install 'RdpWrap'\n'Cancel' - if you are not a confident person", Updater.ApplicationTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+        switch (answer) {
+          case DialogResult.Yes:
+            wrapper.Install(true);
+            break;
+          case DialogResult.No:
+            wrapper.Install(false);
+            break;
+          default:
+            return;
+        }
+#endif
+        //cbxAllowTSConnections.Checked = true;
+        //btnApply.PerformClick();
+        //btnRestartService.PerformClick();
       }
       catch (Exception ex) {
         var message = "Failed to Install: " + ex.Message;
@@ -410,13 +486,13 @@ namespace rdpWrapper {
         MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
       finally {
-        btnInstall.Enabled = true;
+        SetControlsState(true);
       }
     }
 
     private void btnUninstall_Click(object sender, EventArgs e) {
       try {
-        btnUninstall.Enabled = false;
+        SetControlsState(false);
         wrapper.Uninstall();
         
         //cbxAllowTSConnections.Checked = false;
@@ -428,8 +504,16 @@ namespace rdpWrapper {
         MessageBox.Show(message, Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
       finally {
-        btnUninstall.Enabled = true;
+        SetControlsState(true);
       }
+    }
+
+    private void SetControlsState(bool enabled) {
+      refreshTimer.Enabled = enabled;
+      btnInstall.Enabled = installMenuItem.Enabled = enabled;
+      btnUninstall.Enabled = uninstallMenuItem.Enabled = enabled;
+      btnRestartService.Enabled = restartServiceMenuItem.Enabled = enabled;
+      btnGenerate.Enabled = generateMenuItem.Enabled = enabled;
     }
   }
 }

@@ -1,4 +1,5 @@
-﻿using sergiye.Common;
+﻿using Microsoft.Win32;
+using sergiye.Common;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -40,13 +41,41 @@ namespace rdpWrapper {
         Console.WriteLine($"{Updater.ApplicationTitle} {typeof(Program).Assembly.GetName().Version.ToString(3)} {(Environment.Is64BitProcess ? "x64" : "x32")}");
       }
 
-      if (!VersionCompatibility.IsCompatible()) {
+      if (!OperatingSystemHelper.IsCompatible()) {
         const string message = "The application is not compatible with your region.";
         if (consoleMode)
           Console.WriteLine(message);
         else
           MessageBox.Show(message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         Environment.Exit(0);
+      }
+
+      var sysArch = Environment.Is64BitOperatingSystem ? "x64" : "x86";
+      var appArch = Environment.Is64BitProcess ? "x64" : "x86";
+      if (sysArch != appArch) {
+        if (consoleMode) {
+          Console.WriteLine($"You are running {appArch} application on {sysArch} OS. It is not compatible!");
+          Environment.Exit(0);
+        }
+        else {
+          var answer = MessageBox.Show($"You are running {appArch} application on {sysArch} OS.\nIt may not be compatible!\nWould you like to download correct version?", Updater.ApplicationName, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+          switch (answer) {
+            case DialogResult.Yes:
+              Updater.VisitAppSite("releases");
+              return;
+            case DialogResult.No:
+              break;
+            case DialogResult.Cancel:
+              return;
+          }
+        }
+      }
+
+      if (!IsVcRedistInstalled(sysArch)) {
+        if (MessageBox.Show("Microsoft Visual C++ 2015-2022 Redistributable is not installed.\nWould you like to download it now?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
+          Process.Start($"https://aka.ms/vs/17/release/vc_redist.{sysArch}.exe");
+        }
+        Environment.Exit(1);
       }
 
       if (consoleMode) {
@@ -115,6 +144,15 @@ namespace rdpWrapper {
         Application.Exit();
       };
       Application.Run(form);
+    }
+
+    private static bool IsVcRedistInstalled(string arch) {
+      var registryKey = @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\" + arch;
+      var view = (arch == "x64") ? RegistryView.Registry64 : RegistryView.Registry32;
+      using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view))
+      using (var key = baseKey.OpenSubKey(registryKey)) {
+        return key != null && key.GetValue("Installed") is int installed && installed == 1;
+      }
     }
   }
 }

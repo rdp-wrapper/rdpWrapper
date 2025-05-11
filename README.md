@@ -12,7 +12,10 @@
 This tool is inspired by the [stascorp's rdpwrap project](https://github.com/stascorp/rdpwrap).
 However it is written in pure .NET instead of Pascal/Delphi.
 The main idea was to create small and portable single-file application with all required functionality.
-And yes, it can auto-generate offsets for new/updated Windows versions - thanks to the [llccd's RDPWrapOffsetFinder project](https://github.com/llccd/RDPWrapOffsetFinder).
+
+And yes, it can auto-generate offsets for new/updated Windows versions - thanks to the @llccd projects:
+ - [TermWrap](https://github.com/llccd/TermWrap)
+ - [RDPWrapOffsetFinder](https://github.com/llccd/RDPWrapOffsetFinder).
 
 RDP Wrapper works as a layer between Service Control Manager and Terminal Services, so the original termsrv.dll file remains untouched. Also this method is very strong against Windows Update.
 
@@ -39,22 +42,20 @@ Here's a preview of the app's UI running on Windows 10:
 
 [<img src="https://github.com/rdp-wrapper/rdpWrapper/raw/master/preview.png" alt="Themes" width="300"/>](https://raw.githubusercontent.com/rdp-wrapper/rdpWrapper/master/preview.png)
 
+Also there are:
+ - `Light`/`Dark` themes with auto switching mode.
+ - Custom `themes` supported from external files
+
+You can find custom theme examples [here](https://github.com/rdp-wrapper/rdpWrapper/tree/master/themes)
+To add custom theme to the app, just create a `themes` folder next to the executable file and place all theme files there.
+Don't forget to restart the app to scan for new theme files!
 
 ## Download
 
-**The recommended way to get the program is BUILD from source**
-- Install git, Visual Studio
-- `git clone https://github.com/rdp-wrapper/rdpWrapper.git`
-- build
-
-**or download build from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).**
+The published version can be obtained from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).**
 
 ## How can I help improve it?
 The rdpWrapper team welcomes feedback and contributions!<br/>
 You can check if it works properly on your PC. If you notice any inaccuracies, please send us a pull request. If you have any suggestions or improvements, don't hesitate to create an issue.
 
 Also, don't forget to star the repository to help other people find it.
-
-## License
-
-RDP Wrapper is free and open source software licensed under GNU General Public License, Version 3 [GNU 3.0](https://www.gnu.org/licenses/gpl-3.0.html). You can use it for personal and commercial purposes.
