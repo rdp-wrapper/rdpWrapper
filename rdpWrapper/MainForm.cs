@@ -79,6 +79,16 @@ namespace rdpWrapper {
       refreshTimer.Tick += TimerTick;
       refreshTimer.Interval = 1000;
 
+      Updater.Subscribe(
+        (message, isError) => {
+          MessageBox.Show(message, Updater.ApplicationName, MessageBoxButtons.OK, isError ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+        },
+        (message) => {
+          return MessageBox.Show(message, Updater.ApplicationName, MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK;
+        },
+        Application.Exit
+      );
+
       var timer = new Timer();
       timer.Tick += async (_, _) => {
         timer.Enabled = false;
