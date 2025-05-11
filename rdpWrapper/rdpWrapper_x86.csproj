@@ -33,7 +33,23 @@
     <None Remove="externals\x86\TermWrap.dll" />
   </ItemGroup>
   <ItemGroup>
-    <AdditionalFiles Remove="app.manifest" />
+    <Compile Include="..\..\common\Themes\CustomTheme.cs" Link="Common\Themes\CustomTheme.cs" />
+    <Compile Include="..\..\common\Themes\DarkTheme.cs" Link="Common\Themes\DarkTheme.cs" />
+    <Compile Include="..\..\common\Themes\LightTheme.cs" Link="Common\Themes\LightTheme.cs" />
+    <Compile Include="..\..\common\Themes\Theme.cs" Link="Common\Themes\Theme.cs" />
+    <Compile Include="..\..\common\Themes\ThemedToolStripRenderer.cs" Link="Common\Themes\ThemedToolStripRenderer.cs" />
+    <Compile Include="..\..\common\Crasher.cs" Link="Common\Crasher.cs" />
+    <Compile Include="..\..\common\ISettings.cs" Link="Common\ISettings.cs" />
+    <Compile Include="..\..\common\Logger.cs" Link="Common\Logger.cs" />
+    <Compile Include="..\..\common\OperatingSystemHelper.cs" Link="Common\OperatingSystemHelper.cs" />
+    <Compile Include="..\..\common\PersistentSettings.cs" Link="Common\PersistentSettings.cs" />
+    <Compile Include="..\..\common\SerializerHelper.cs" Link="Common\SerializerHelper.cs" />
+    <Compile Include="..\..\common\ServiceHelper.cs" Link="Common\ServiceHelper.cs" />
+    <Compile Include="..\..\common\SimplTextBox.cs" Link="Common\SimplTextBox.cs" />
+    <Compile Include="..\..\common\ToolStripRadioButtonMenuItem.cs" Link="Common\ToolStripRadioButtonMenuItem.cs" />
+    <Compile Include="..\..\common\Updater.cs" Link="Common\Updater.cs" />
+    <Compile Include="..\..\common\UserOption.cs" Link="Common\UserOption.cs" />
+    <Compile Include="..\..\common\WinStationHelper.cs" Link="Common\WinStationHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="MainForm.Designer.cs">
