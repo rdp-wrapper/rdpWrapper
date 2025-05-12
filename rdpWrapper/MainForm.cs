@@ -195,9 +195,7 @@ namespace rdpWrapper {
         themeMenuItem.DropDownItems.Add(autoThemeMenuItem);
       }
 
-      var allThemes = Debugger.IsAttached 
-        ? CustomTheme.GetAllThemes(".\\..\\..\\themes")
-        : CustomTheme.GetAllThemes();
+      var allThemes = CustomTheme.GetAllThemes("themes", "rdpWrapper.themes").OrderBy(x => x.DisplayName).ToList();
 
       var setTheme = allThemes.FirstOrDefault(theme => settings.GetValue("theme", "auto") == theme.Id);
       if (setTheme != null) {

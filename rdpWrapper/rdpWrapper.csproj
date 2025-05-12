@@ -62,6 +62,9 @@
     <EmbeddedResource Include="externals\x64\UmWrap.dll" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\themes\*.json" Link="themes\%(Filename)%(Extension)"/>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\..\common\sergiye.Common.UI\Themes\CustomTheme.cs" Link="Common\Themes\CustomTheme.cs" />
     <Compile Include="..\..\common\sergiye.Common.UI\Themes\DarkTheme.cs" Link="Common\Themes\DarkTheme.cs" />
     <Compile Include="..\..\common\sergiye.Common.UI\Themes\LightTheme.cs" Link="Common\Themes\LightTheme.cs" />
