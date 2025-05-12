@@ -11,11 +11,15 @@
     <ApplicationIcon>app.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
-    <Platforms>AnyCPU</Platforms>
+    <Platforms>AnyCPU;x86;x64</Platforms>
     <Configurations>Debug;Release;DebugLite;ReleaseLite</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AssemblyName>rdpWrapper</AssemblyName>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <AssemblyName>rdpWrapper_x64</AssemblyName>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLite|AnyCPU'">
@@ -23,12 +27,44 @@
     <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLite|x64'">
+    <AssemblyName>rdpWrapper_x64_lite</AssemblyName>
+    <DefineConstants>LITEVERSION</DefineConstants>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <AssemblyName>rdpWrapper_x86</AssemblyName>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLite|x86'">
+    <AssemblyName>rdpWrapper_lite_x86</AssemblyName>
+    <DefineConstants>LITEVERSION</DefineConstants>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AssemblyName>rdpWrapper</AssemblyName>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <AssemblyName>rdpWrapper_x64</AssemblyName>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|AnyCPU'">
     <AssemblyName>rdpWrapper_lite</AssemblyName>
+    <DefineConstants>LITEVERSION</DefineConstants>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|x64'">
+    <AssemblyName>rdpWrapper_x64_lite</AssemblyName>
+    <DefineConstants>LITEVERSION</DefineConstants>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <AssemblyName>rdpWrapper_x86</AssemblyName>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|x86'">
+    <AssemblyName>rdpWrapper_x86_lite</AssemblyName>
     <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
@@ -39,21 +75,25 @@
     <None Remove="externals\rdpwrap.ini" />
     <EmbeddedResource Include="externals\rdpwrap.ini" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsLiteVersion)' != 'true'">
+  <ItemGroup Condition="'$(IsLiteVersion)' != 'true' And ('$(Platform)'=='x86' Or '$(Platform)'=='AnyCPU')">
     <None Remove="externals\x86\rdpwrap.dll" />
     <None Remove="externals\x86\RDPWrapOffsetFinder.exe" />
     <EmbeddedResource Include="externals\x86\rdpwrap.dll" />
     <EmbeddedResource Include="externals\x86\RDPWrapOffsetFinder.exe" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsLiteVersion)' != 'true' And ('$(Platform)'=='x64' Or '$(Platform)'=='AnyCPU')">
     <None Remove="externals\x64\rdpwrap.dll" />
     <None Remove="externals\x64\RDPWrapOffsetFinder.exe" />
     <EmbeddedResource Include="externals\x64\rdpwrap.dll" />
     <EmbeddedResource Include="externals\x64\RDPWrapOffsetFinder.exe" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(Platform)'=='x86' Or '$(Platform)'=='AnyCPU'">
     <None Remove="externals\x86\Zydis.dll" />
     <None Remove="externals\x86\TermWrap.dll" />
     <EmbeddedResource Include="externals\x86\Zydis.dll" />
     <EmbeddedResource Include="externals\x86\TermWrap.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Platform)'=='x64' Or '$(Platform)'=='AnyCPU'">
     <None Remove="externals\x64\Zydis.dll" />
     <None Remove="externals\x64\TermWrap.dll" />
     <None Remove="externals\x64\UmWrap.dll" />
@@ -62,7 +102,7 @@
     <EmbeddedResource Include="externals\x64\UmWrap.dll" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\themes\*.json" Link="themes\%(Filename)%(Extension)"/>
+    <EmbeddedResource Include="..\themes\*.json" Link="themes\%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\common\sergiye.Common.UI\Themes\CustomTheme.cs" Link="Common\Themes\CustomTheme.cs" />
@@ -104,7 +144,7 @@
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Release'">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Release' Or '$(Configuration)' == 'ReleaseLite'">
     <Exec Command="for %%f in ($(OutDir)\*) do if not %%~xf==.exe del /S /Q &quot;%%f&quot;" />
   </Target>
 </Project>
