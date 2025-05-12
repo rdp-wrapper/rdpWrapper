@@ -59,3 +59,6 @@ The rdpWrapper team welcomes feedback and contributions!<br/>
 You can check if it works properly on your PC. If you notice any inaccuracies, please send us a pull request. If you have any suggestions or improvements, don't hesitate to create an issue.
 
 Also, don't forget to star the repository to help other people find it.
+
+## Donate!
+Every [cup of coffee](https://patreon.com/SergiyE) you donate will help this app become better and let me know that this project is in demand.
