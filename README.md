@@ -1,6 +1,6 @@
 # RDP Wrapper
 [![Release](https://img.shields.io/github/v/release/rdp-wrapper/rdpWrapper?style=for-the-badge)](https://github.com/rdp-wrapper/rdpWrapper/releases/latest)
-![Downloads](https://img.shields.io/github/downloads/rdp-wrapper/rdpWrapper/total?style=for-the-badge&color=ff4f42)
+[![Downloads](https://img.shields.io/github/downloads/rdp-wrapper/rdpWrapper/total?style=for-the-badge&color=ff4f42)](https://sergiye.github.io/github-release-stats/?username=rdp-wrapper&repository=rdpWrapper&page=1&per_page=100)
 ![Last commit](https://img.shields.io/github/last-commit/rdp-wrapper/rdpWrapper?style=for-the-badge&color=00AD00)
 
 ----
