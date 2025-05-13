@@ -61,6 +61,7 @@ namespace rdpWrapper {
       this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
       this.siteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.addUserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       ((System.ComponentModel.ISupportInitialize)(this.seRDPPort)).BeginInit();
       this.gbxGeneralSettings.SuspendLayout();
       this.gbxStatus.SuspendLayout();
@@ -391,6 +392,7 @@ namespace rdpWrapper {
       // fileToolStripMenuItem
       // 
       this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.addUserToolStripMenuItem,
             this.testToolStripMenuItem,
             this.toolStripMenuItem2,
             this.exitToolStripMenuItem});
@@ -402,20 +404,20 @@ namespace rdpWrapper {
       // 
       this.testToolStripMenuItem.Name = "testToolStripMenuItem";
       this.testToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.T)));
-      this.testToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+      this.testToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
       this.testToolStripMenuItem.Text = "Test";
       this.testToolStripMenuItem.Click += new System.EventHandler(this.btnTest_Click);
       // 
       // toolStripMenuItem2
       // 
       this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-      this.toolStripMenuItem2.Size = new System.Drawing.Size(135, 6);
+      this.toolStripMenuItem2.Size = new System.Drawing.Size(177, 6);
       // 
       // exitToolStripMenuItem
       // 
       this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
       this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.W)));
-      this.exitToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+      this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
       this.exitToolStripMenuItem.Text = "Exit";
       this.exitToolStripMenuItem.Click += new System.EventHandler(this.btnClose_Click);
       // 
@@ -521,6 +523,13 @@ namespace rdpWrapper {
       this.aboutToolStripMenuItem.Text = "About";
       this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
       // 
+      // addUserToolStripMenuItem
+      // 
+      this.addUserToolStripMenuItem.Name = "addUserToolStripMenuItem";
+      this.addUserToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+      this.addUserToolStripMenuItem.Text = "Create RD user";
+      this.addUserToolStripMenuItem.Click += new System.EventHandler(this.addUserToolStripMenuItem_Click);
+      // 
       // MainForm
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -594,5 +603,6 @@ namespace rdpWrapper {
     private ToolStripMenuItem uninstallMenuItem;
     private ToolStripMenuItem generateMenuItem;
     private ToolStripMenuItem restartServiceMenuItem;
+    private ToolStripMenuItem addUserToolStripMenuItem;
   }
 }

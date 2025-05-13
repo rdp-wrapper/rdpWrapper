@@ -20,6 +20,7 @@ namespace rdpWrapper {
     private readonly Timer refreshTimer;
     private readonly Logger logger;
     private readonly Wrapper wrapper;
+    private readonly LocalUsersManager usersManager;
     private readonly PersistentSettings settings;
 
     public MainForm() {
@@ -61,6 +62,7 @@ namespace rdpWrapper {
       logger.Log($"Application started: {title}", Logger.StateKind.Info, false);
       
       wrapper = new Wrapper(logger);
+      usersManager = new LocalUsersManager(logger);
       
       rgNLAOptions.Items.AddRange([
         "GUI Authentication Only", 
@@ -400,6 +402,29 @@ namespace rdpWrapper {
           lblSupported.Text = "[supported]";
           lblSupported.ForeColor = Theme.Current.StatusOkColor;
         }
+      }
+    }
+
+    private void addUserToolStripMenuItem_Click(object sender, EventArgs e) {
+      try {
+        SetControlsState(false);
+        addUserToolStripMenuItem.Enabled = false;
+        if (InputForm.GetValue(Updater.ApplicationName, "Please enter the username:", out var userName) == DialogResult.OK) {
+          var user = usersManager.CreateUserIfNotExist(userName);
+          if (InputForm.GetValue(Updater.ApplicationName, "Please enter the password:", out var password) == DialogResult.OK) {
+            usersManager.SetUserPassword(user, password);
+            usersManager.EnsureUserInRemoteDesktopUsers(user);
+            MessageBox.Show("Done!", Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+          }
+        }
+      }
+      catch (Exception ex) {
+        logger.Log(ex.Message, Logger.StateKind.Error);
+        MessageBox.Show(ex.Message, Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      }
+      finally {
+        SetControlsState(true);
+        addUserToolStripMenuItem.Enabled = true;
       }
     }
 

@@ -1,0 +1,23 @@
+﻿using System.Drawing;
+using System.Windows.Forms;
+
+namespace rdpWrapper {
+
+  public partial class InputForm : Form {
+
+    public InputForm() {
+      InitializeComponent();
+      Icon = Icon.ExtractAssociatedIcon(typeof(MainForm).Assembly.Location);
+    }
+
+    public static DialogResult GetValue(string title, string promptText, out string input) {
+
+      var form = new InputForm();
+      form.lblText.Text = promptText;
+      form.Text = title;
+      var dialogResult = form.ShowDialog();
+      input = form.txtInput.Text;
+      return dialogResult;
+    }
+  }
+}
