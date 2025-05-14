@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -325,6 +326,10 @@ namespace rdpWrapper {
         "S-1-5-32-545", // SID for "Users"
       ] , FileSystemRights.FullControl, AccessControlType.Allow);
 
+      if (IsDefenderActive() && !IsFolderExcluded(WrapperFolderPath)) {
+        SetFolderExclusion(WrapperFolderPath);
+      }
+
       string wrapPath;
       if (useTermWrap) {
         wrapPath = ExtractResourceFile(TermWrapDllName, WrapperFolderPath, archPrefix: true);
@@ -455,7 +460,79 @@ namespace rdpWrapper {
       }
       dInfo.SetAccessControl(dSecurity);
     }
-    
+
+    private bool IsDefenderActive() {
+      try {
+        using var process = Process.Start(new ProcessStartInfo {
+          FileName = "powershell",
+          Arguments = "Get-MpComputerStatus | Select-Object -ExpandProperty AMServiceEnabled",
+          RedirectStandardOutput = true,
+          UseShellExecute = false,
+          CreateNoWindow = true
+        });
+        string output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit();
+        return output.Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
+      }
+      catch (Exception ex) {
+        logger.Log("Error checking is defender active: " + ex.Message, Logger.StateKind.Error);
+        return false;
+      }
+    }
+
+    private bool IsFolderExcluded(string folderPath) {
+      try {
+        using var process = Process.Start(new ProcessStartInfo {
+          FileName = "powershell",
+          Arguments = "Get-MpPreference | Select-Object -ExpandProperty ExclusionPath",
+          RedirectStandardOutput = true,
+          UseShellExecute = false,
+          CreateNoWindow = true
+        });
+        string output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit();
+        return output
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim()).Any(p => string.Equals(p, folderPath, StringComparison.OrdinalIgnoreCase));
+      }
+      catch (Exception ex) {
+        logger.Log("Error checking is folder excluded: " + ex.Message, Logger.StateKind.Error);
+        return false;
+      }
+    }
+
+    private bool SetFolderExclusion(string folderPath, bool add = true) {
+      try {
+        var process = Process.Start(new ProcessStartInfo {
+          FileName = "powershell",
+          Arguments = $"{(add ? "Add" : "Remove")}-MpPreference -ExclusionPath \"{folderPath}\"",
+          Verb = "runas",
+          UseShellExecute = true
+        });
+        if (process != null) {
+          process.WaitForExit();
+          return true;
+        }
+        else {
+          logger.Log("UAC not confirmed by user.");
+          return false;
+        }
+      }
+      catch (System.ComponentModel.Win32Exception ex) {
+        if (ex.NativeErrorCode == 1223) {
+          logger.Log("UAC not confirmed by user", Logger.StateKind.Error);
+        }
+        else {
+          logger.Log($"Error starting command: {ex.Message}", Logger.StateKind.Error);
+        }
+        return false;
+      }
+      catch (Exception ex) {
+        logger.Log("Error changing exclusion: " + ex.Message, Logger.StateKind.Error);
+        return false;
+      }
+    }
+
     #endregion
   }
 }

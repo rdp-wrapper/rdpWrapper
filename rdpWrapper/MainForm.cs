@@ -522,7 +522,7 @@ namespace rdpWrapper {
               return;
           }
 #endif
-          //btnRestartService.PerformClick();
+          MessageBox.Show($"Wrapper was installed in folder: '{wrapper.WrapperFolderPath}'\nYour antivirus software might block or interfere with wrapper folder.\nPlease verify that it is included in the exclusion list!", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         else {
           wrapper.Uninstall();
