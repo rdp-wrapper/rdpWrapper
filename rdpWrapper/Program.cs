@@ -21,6 +21,13 @@ namespace rdpWrapper {
         Environment.Exit(0);
       }
 
+      if (Environment.Is64BitOperatingSystem != Environment.Is64BitProcess) {
+        if (MessageBox.Show($"You are running an application build made for a different OS architecture.\nIt is not compatible!\nWould you like to download correct version?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
+          Updater.VisitAppSite("releases");
+        }
+        Environment.Exit(0);
+      }
+
       Crasher.Listen();
 
       Application.EnableVisualStyles();
