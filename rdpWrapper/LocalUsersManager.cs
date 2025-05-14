@@ -1,14 +1,18 @@
 ﻿using sergiye.Common;
 using System;
+using System.Collections.Generic;
 using System.DirectoryServices.AccountManagement;
+using System.Linq;
 using System.Security.Principal;
 
 namespace rdpWrapper {
 
-  internal class LocalUsersManager {
+  internal class LocalUsersManager: IDisposable {
 
     private readonly Logger logger;
     private readonly PrincipalContext context;
+
+    public const string RemoteDesktopUsersGroupSid = "S-1-5-32-555";
 
     public LocalUsersManager(Logger logger) {
       this.logger = logger;
@@ -36,13 +40,12 @@ namespace rdpWrapper {
       return user;
     }
 
-    public void SetUserPassword(UserPrincipal user, string password = null) {
+    public void SetUserPassword(UserPrincipal user, string password) {
 
       if (user == null)
         throw new ArgumentNullException(nameof(user));
-
-      //if (string.IsNullOrEmpty(password))
-      //  password = user.Name;
+      if (string.IsNullOrEmpty(password))
+        throw new ArgumentNullException(nameof(password));
 
       user.SetPassword(password);
       user.Save();
@@ -54,9 +57,7 @@ namespace rdpWrapper {
       if (user == null)
         throw new ArgumentNullException(nameof(user));
 
-      var remoteDesktopGroupSid = new SecurityIdentifier("S-1-5-32-555");
-      var group = GroupPrincipal.FindByIdentity(context, IdentityType.Sid, remoteDesktopGroupSid.Value)
-        ?? throw new Exception($"Group 'Remote Desktop Users' not found on this machine.");
+      var group = GetRemoteDesktopUserGroup();
       if (!group.Members.Contains(user)) {
         group.Members.Add(user);
         group.Save();
@@ -65,6 +66,22 @@ namespace rdpWrapper {
       else {
         logger.Log($"User '{user.Name}' is already a member of '{group.Name}'.", Logger.StateKind.Info);
       }
+    }
+
+    public IEnumerable<string> GetRemoteDesktopUsers() {
+
+      var group = GetRemoteDesktopUserGroup();
+      return group.Members.Select(u => u.Name);
+    }
+
+    public GroupPrincipal GetRemoteDesktopUserGroup() {
+      var remoteDesktopGroupSid = new SecurityIdentifier(RemoteDesktopUsersGroupSid);
+      return GroupPrincipal.FindByIdentity(context, IdentityType.Sid, remoteDesktopGroupSid.Value)
+        ?? throw new Exception($"Group 'Remote Desktop Users' not found on this machine.");
+    }
+
+    public void Dispose() {
+      context?.Dispose();
     }
   }
 }

@@ -20,7 +20,6 @@ namespace rdpWrapper {
     private readonly Timer refreshTimer;
     private readonly Logger logger;
     private readonly Wrapper wrapper;
-    private readonly LocalUsersManager usersManager;
     private readonly PersistentSettings settings;
 
     public MainForm() {
@@ -62,7 +61,6 @@ namespace rdpWrapper {
       logger.Log($"Application started: {title}", Logger.StateKind.Info, false);
       
       wrapper = new Wrapper(logger);
-      usersManager = new LocalUsersManager(logger);
       
       rgNLAOptions.Items.AddRange([
         "GUI Authentication Only", 
@@ -409,12 +407,24 @@ namespace rdpWrapper {
       try {
         SetControlsState(false);
         addUserToolStripMenuItem.Enabled = false;
-        if (InputForm.GetValue(Updater.ApplicationName, "Please enter the username:", out var userName) == DialogResult.OK) {
-          var user = usersManager.CreateUserIfNotExist(userName);
-          if (InputForm.GetValue(Updater.ApplicationName, "Please enter the password:", out var password) == DialogResult.OK) {
-            usersManager.SetUserPassword(user, password);
-            usersManager.EnsureUserInRemoteDesktopUsers(user);
-            MessageBox.Show("Done!", Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        if (InputForm.GetValue(Updater.ApplicationName, "Please enter the 'User name':", out var userName) == DialogResult.OK) {
+          using (var usersManager = new LocalUsersManager(logger)) {
+            if (usersManager.GetRemoteDesktopUsers().Any(u => u.Equals(userName, StringComparison.OrdinalIgnoreCase))) {
+              MessageBox.Show($"User '{userName}' is already a member of 'Remote Desktop Users' group.", Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else {
+              var user = usersManager.CreateUserIfNotExist(userName);
+              //if (user.GetAuthorizationGroups().Any(g => g.Sid.Value == LocalUsersManager.RemoteDesktopUsersGroupSid)) {
+              //  MessageBox.Show($"User '{userName}' is already a member of 'Remote Desktop Users' group.", Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+              //}
+              //else {
+                if (InputForm.GetValue(Updater.ApplicationName, "Please enter the 'Password':", out var password) == DialogResult.OK) {
+                  usersManager.SetUserPassword(user, password);
+                  usersManager.EnsureUserInRemoteDesktopUsers(user);
+                  MessageBox.Show($"User '{user.Name}' is a member of 'Remote Desktop Users' group.", Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+              //}
+            }
           }
         }
       }
@@ -428,8 +438,25 @@ namespace rdpWrapper {
       }
     }
 
+    private void manageUsersToolStripMenuItem_Click(object sender, EventArgs e) {
+      Process.Start("lusrmgr.msc");
+    }
+
+    private void manageUsersoldToolStripMenuItem_Click(object sender, EventArgs e) {
+      Process.Start("netplwiz");
+      //Process.Start("control", "userpasswords2");
+    }
+
     private void btnTest_Click(object sender, EventArgs e) {
-      Process.Start("mstsc.exe", $"/v:127.0.0.2:{oldPort}");
+
+      var width = Screen.PrimaryScreen.Bounds.Width * 2 / 3;
+      var height = Screen.PrimaryScreen.Bounds.Height * 2 / 3;
+      var arguments = $"/v:127.0.0.2:{oldPort} /w:{width} /h:{height}";
+      if (MessageBox.Show("Test as public connection? (Passwords and bitmaps aren't cached)", Updater.ApplicationTitle, MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK) {
+        arguments += " /public";
+      }
+      //https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/mstsc
+      Process.Start("mstsc.exe", arguments);
     }
 
     private void btnGenerate_Click(object sender, EventArgs e) {

@@ -33,17 +33,20 @@
       // 
       this.txtInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-      this.txtInput.Location = new System.Drawing.Point(12, 41);
+      this.txtInput.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+      this.txtInput.Location = new System.Drawing.Point(18, 63);
+      this.txtInput.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
       this.txtInput.Name = "txtInput";
-      this.txtInput.Size = new System.Drawing.Size(354, 26);
+      this.txtInput.Size = new System.Drawing.Size(393, 37);
       this.txtInput.TabIndex = 1;
       // 
       // lblText
       // 
       this.lblText.AutoSize = true;
-      this.lblText.Location = new System.Drawing.Point(12, 18);
+      this.lblText.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+      this.lblText.Location = new System.Drawing.Point(13, 22);
       this.lblText.Name = "lblText";
-      this.lblText.Size = new System.Drawing.Size(93, 20);
+      this.lblText.Size = new System.Drawing.Size(112, 28);
       this.lblText.TabIndex = 0;
       this.lblText.Text = "Enter value:";
       // 
@@ -51,9 +54,11 @@
       // 
       this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
       this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-      this.btnOk.Location = new System.Drawing.Point(125, 86);
+      this.btnOk.Enabled = false;
+      this.btnOk.Location = new System.Drawing.Point(138, 124);
+      this.btnOk.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
       this.btnOk.Name = "btnOk";
-      this.btnOk.Size = new System.Drawing.Size(116, 44);
+      this.btnOk.Size = new System.Drawing.Size(129, 43);
       this.btnOk.TabIndex = 2;
       this.btnOk.Text = "OK";
       this.btnOk.UseVisualStyleBackColor = true;
@@ -62,9 +67,10 @@
       // 
       this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
       this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-      this.btnCancel.Location = new System.Drawing.Point(267, 86);
+      this.btnCancel.Location = new System.Drawing.Point(296, 124);
+      this.btnCancel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
       this.btnCancel.Name = "btnCancel";
-      this.btnCancel.Size = new System.Drawing.Size(99, 44);
+      this.btnCancel.Size = new System.Drawing.Size(110, 43);
       this.btnCancel.TabIndex = 3;
       this.btnCancel.Text = "Cancel";
       this.btnCancel.UseVisualStyleBackColor = true;
@@ -72,18 +78,20 @@
       // InputForm
       // 
       this.AcceptButton = this.btnOk;
-      this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+      this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.CancelButton = this.btnCancel;
-      this.ClientSize = new System.Drawing.Size(378, 144);
+      this.ClientSize = new System.Drawing.Size(420, 180);
       this.Controls.Add(this.btnCancel);
       this.Controls.Add(this.btnOk);
       this.Controls.Add(this.lblText);
       this.Controls.Add(this.txtInput);
+      this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+      this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
       this.MaximizeBox = false;
-      this.MaximumSize = new System.Drawing.Size(1000, 200);
+      this.MaximumSize = new System.Drawing.Size(1109, 236);
       this.MinimizeBox = false;
-      this.MinimumSize = new System.Drawing.Size(400, 200);
+      this.MinimumSize = new System.Drawing.Size(442, 236);
       this.Name = "InputForm";
       this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
       this.ResumeLayout(false);
