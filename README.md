@@ -28,6 +28,7 @@ The application is portable and has the following features:
  - RDP host server on any Windows edition beginning from Vista
  - Using the same user simultaneously for local and remote logon (see configuration app)
  - Console and remote sessions at the same time
+ - Enabled camera and USB redirection (when TermWrap installed)
  - show RDP service current status
  - configure RDP options
  - install / uninstall wrapper
@@ -53,6 +54,27 @@ Don't forget to restart the app to scan for new theme files!
 ## Download
 
 The published version can be obtained from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).
+
+
+
+## Notes
+
+### Enable USB redirection
+To enable remote desktop USB redirection, additional group policy settings are required (gpedit):
+
+`Computer Configuration\Administrative Templates\System\Device Installation` - `Allow remote access to the Plug and Play interface` -> Enabled
+
+`Computer Configuration\Administrative Templates\Windows Components\Remote Desktop Services\Remote Desktop Session Host\Device and Resource Redirection` - `Do not allow supported Plug and Play device redirection` -> Disabled
+
+`Computer Configuration\Administrative Templates\Windows Components\Remote Desktop Services\Remote Desktop Connection Client\RemoteFX USB Device Redirection` - `Allow RDP redirection of other supported RemoteFX USB devices from this computer` -> Enabled
+
+### Notes on audio recording redirection
+Just like UmWrap, EndpWrap is only needed on server and home editions. It gets loaded in all applications that play/record remote audio, and may cause some tricky applications to stuck or crash.
+
+To enable audio recording redirection, both EndpWrap.dll and Zydis.dll needs to be copied to the system32 folder. After that, change the following registry entry from rdpendp.dll to EndpWrap.dll:
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp\AudioEnumeratorDll
+
 
 ## How can I help improve it?
 The rdpWrapper team welcomes feedback and contributions!<br/>
