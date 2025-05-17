@@ -23,11 +23,17 @@ namespace rdpWrapper {
       this.cbDontDisplayLastUser = new System.Windows.Forms.CheckBox();
       this.rgNLAOptions = new System.Windows.Forms.ComboBox();
       this.rgShadowOptions = new System.Windows.Forms.ComboBox();
-      this.seRDPPort = new System.Windows.Forms.NumericUpDown();
+      this.numRDPPort = new System.Windows.Forms.NumericUpDown();
       this.lRDPPort = new System.Windows.Forms.Label();
       this.cbxHonorLegacy = new System.Windows.Forms.CheckBox();
       this.btnRestartService = new System.Windows.Forms.Button();
       this.gbxGeneralSettings = new System.Windows.Forms.GroupBox();
+      this.lblMaxConnections = new System.Windows.Forms.Label();
+      this.numMaxConnections = new System.Windows.Forms.NumericUpDown();
+      this.cbxAllowAudioCapture = new System.Windows.Forms.CheckBox();
+      this.cbxAllowVideoCapture = new System.Windows.Forms.CheckBox();
+      this.cbxAllowPnp = new System.Windows.Forms.CheckBox();
+      this.cbxAllowPlaybackRedirect = new System.Windows.Forms.CheckBox();
       this.lblShadowMode = new System.Windows.Forms.Label();
       this.lblAuthMode = new System.Windows.Forms.Label();
       this.gbxStatus = new System.Windows.Forms.GroupBox();
@@ -42,21 +48,27 @@ namespace rdpWrapper {
       this.lblListenerState = new System.Windows.Forms.Label();
       this.lblServiceState = new System.Windows.Forms.Label();
       this.lblWrapperState = new System.Windows.Forms.Label();
-      this.txtLog = new sergiye.Common.SimplTextBox();
       this.mainMenu = new System.Windows.Forms.MenuStrip();
       this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-      this.addUserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-      this.manageUsersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-      this.manageUsersoldToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
       this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.installMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.uninstallMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-      this.generateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.restartServiceMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.generateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+      this.addUserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.manageUsersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.manageUsersoldToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.storeSeiingsInFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.wrapperToInstallMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.showAntivirusWarnMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.addDefenderExclusionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.addFirewallRuleMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
       this.themeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.showLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,8 +76,10 @@ namespace rdpWrapper {
       this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
       this.siteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-      ((System.ComponentModel.ISupportInitialize)(this.seRDPPort)).BeginInit();
+      this.txtLog = new sergiye.Common.SimplTextBox();
+      ((System.ComponentModel.ISupportInitialize)(this.numRDPPort)).BeginInit();
       this.gbxGeneralSettings.SuspendLayout();
+      ((System.ComponentModel.ISupportInitialize)(this.numMaxConnections)).BeginInit();
       this.gbxStatus.SuspendLayout();
       this.mainMenu.SuspendLayout();
       this.SuspendLayout();
@@ -73,7 +87,7 @@ namespace rdpWrapper {
       // cbxSingleSessionPerUser
       // 
       this.cbxSingleSessionPerUser.AutoSize = true;
-      this.cbxSingleSessionPerUser.Location = new System.Drawing.Point(6, 89);
+      this.cbxSingleSessionPerUser.Location = new System.Drawing.Point(6, 65);
       this.cbxSingleSessionPerUser.Name = "cbxSingleSessionPerUser";
       this.cbxSingleSessionPerUser.Size = new System.Drawing.Size(199, 24);
       this.cbxSingleSessionPerUser.TabIndex = 1;
@@ -91,7 +105,7 @@ namespace rdpWrapper {
       // cbDontDisplayLastUser
       // 
       this.cbDontDisplayLastUser.AutoSize = true;
-      this.cbDontDisplayLastUser.Location = new System.Drawing.Point(6, 120);
+      this.cbDontDisplayLastUser.Location = new System.Drawing.Point(6, 95);
       this.cbDontDisplayLastUser.Name = "cbDontDisplayLastUser";
       this.cbDontDisplayLastUser.Size = new System.Drawing.Size(239, 24);
       this.cbDontDisplayLastUser.TabIndex = 2;
@@ -99,42 +113,37 @@ namespace rdpWrapper {
       // 
       // rgNLAOptions
       // 
-      this.rgNLAOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
       this.rgNLAOptions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-      this.rgNLAOptions.Location = new System.Drawing.Point(274, 88);
+      this.rgNLAOptions.Location = new System.Drawing.Point(276, 118);
       this.rgNLAOptions.Name = "rgNLAOptions";
       this.rgNLAOptions.Size = new System.Drawing.Size(267, 28);
-      this.rgNLAOptions.TabIndex = 7;
+      this.rgNLAOptions.TabIndex = 12;
       // 
       // rgShadowOptions
       // 
-      this.rgShadowOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
       this.rgShadowOptions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-      this.rgShadowOptions.Location = new System.Drawing.Point(274, 149);
+      this.rgShadowOptions.Location = new System.Drawing.Point(276, 172);
       this.rgShadowOptions.Name = "rgShadowOptions";
       this.rgShadowOptions.Size = new System.Drawing.Size(267, 28);
-      this.rgShadowOptions.TabIndex = 9;
+      this.rgShadowOptions.TabIndex = 14;
       // 
-      // seRDPPort
+      // numRDPPort
       // 
-      this.seRDPPort.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-      this.seRDPPort.Location = new System.Drawing.Point(420, 32);
-      this.seRDPPort.Maximum = new decimal(new int[] {
+      this.numRDPPort.Location = new System.Drawing.Point(420, 32);
+      this.numRDPPort.Maximum = new decimal(new int[] {
             65535,
             0,
             0,
             0});
-      this.seRDPPort.Minimum = new decimal(new int[] {
+      this.numRDPPort.Minimum = new decimal(new int[] {
             1,
             0,
             0,
             0});
-      this.seRDPPort.Name = "seRDPPort";
-      this.seRDPPort.Size = new System.Drawing.Size(120, 26);
-      this.seRDPPort.TabIndex = 5;
-      this.seRDPPort.Value = new decimal(new int[] {
+      this.numRDPPort.Name = "numRDPPort";
+      this.numRDPPort.Size = new System.Drawing.Size(120, 26);
+      this.numRDPPort.TabIndex = 8;
+      this.numRDPPort.Value = new decimal(new int[] {
             3389,
             0,
             0,
@@ -142,16 +151,17 @@ namespace rdpWrapper {
       // 
       // lRDPPort
       // 
+      this.lRDPPort.AutoSize = true;
       this.lRDPPort.Location = new System.Drawing.Point(274, 32);
       this.lRDPPort.Name = "lRDPPort";
-      this.lRDPPort.Size = new System.Drawing.Size(100, 23);
-      this.lRDPPort.TabIndex = 4;
+      this.lRDPPort.Size = new System.Drawing.Size(80, 20);
+      this.lRDPPort.TabIndex = 7;
       this.lRDPPort.Text = "RDP Port:";
       // 
       // cbxHonorLegacy
       // 
       this.cbxHonorLegacy.AutoSize = true;
-      this.cbxHonorLegacy.Location = new System.Drawing.Point(6, 152);
+      this.cbxHonorLegacy.Location = new System.Drawing.Point(6, 126);
       this.cbxHonorLegacy.Name = "cbxHonorLegacy";
       this.cbxHonorLegacy.Size = new System.Drawing.Size(253, 24);
       this.cbxHonorLegacy.TabIndex = 3;
@@ -169,6 +179,12 @@ namespace rdpWrapper {
       // 
       // gbxGeneralSettings
       // 
+      this.gbxGeneralSettings.Controls.Add(this.lblMaxConnections);
+      this.gbxGeneralSettings.Controls.Add(this.numMaxConnections);
+      this.gbxGeneralSettings.Controls.Add(this.cbxAllowAudioCapture);
+      this.gbxGeneralSettings.Controls.Add(this.cbxAllowVideoCapture);
+      this.gbxGeneralSettings.Controls.Add(this.cbxAllowPnp);
+      this.gbxGeneralSettings.Controls.Add(this.cbxAllowPlaybackRedirect);
       this.gbxGeneralSettings.Controls.Add(this.rgShadowOptions);
       this.gbxGeneralSettings.Controls.Add(this.lblShadowMode);
       this.gbxGeneralSettings.Controls.Add(this.rgNLAOptions);
@@ -176,33 +192,91 @@ namespace rdpWrapper {
       this.gbxGeneralSettings.Controls.Add(this.cbDontDisplayLastUser);
       this.gbxGeneralSettings.Controls.Add(this.lRDPPort);
       this.gbxGeneralSettings.Controls.Add(this.cbxHonorLegacy);
-      this.gbxGeneralSettings.Controls.Add(this.seRDPPort);
+      this.gbxGeneralSettings.Controls.Add(this.numRDPPort);
       this.gbxGeneralSettings.Controls.Add(this.cbxAllowTSConnections);
       this.gbxGeneralSettings.Controls.Add(this.cbxSingleSessionPerUser);
       this.gbxGeneralSettings.Dock = System.Windows.Forms.DockStyle.Top;
-      this.gbxGeneralSettings.Location = new System.Drawing.Point(0, 167);
+      this.gbxGeneralSettings.Location = new System.Drawing.Point(0, 164);
       this.gbxGeneralSettings.Name = "gbxGeneralSettings";
-      this.gbxGeneralSettings.Size = new System.Drawing.Size(552, 192);
+      this.gbxGeneralSettings.Size = new System.Drawing.Size(552, 248);
       this.gbxGeneralSettings.TabIndex = 2;
       this.gbxGeneralSettings.TabStop = false;
       this.gbxGeneralSettings.Text = "General settings";
       // 
+      // lblMaxConnections
+      // 
+      this.lblMaxConnections.AutoSize = true;
+      this.lblMaxConnections.Location = new System.Drawing.Point(274, 63);
+      this.lblMaxConnections.Name = "lblMaxConnections";
+      this.lblMaxConnections.Size = new System.Drawing.Size(132, 20);
+      this.lblMaxConnections.TabIndex = 9;
+      this.lblMaxConnections.Text = "Max connections:";
+      // 
+      // numMaxConnections
+      // 
+      this.numMaxConnections.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+      this.numMaxConnections.Location = new System.Drawing.Point(420, 63);
+      this.numMaxConnections.Maximum = new decimal(new int[] {
+            999999,
+            0,
+            0,
+            0});
+      this.numMaxConnections.Name = "numMaxConnections";
+      this.numMaxConnections.Size = new System.Drawing.Size(120, 26);
+      this.numMaxConnections.TabIndex = 10;
+      // 
+      // cbxAllowAudioCapture
+      // 
+      this.cbxAllowAudioCapture.AutoSize = true;
+      this.cbxAllowAudioCapture.Location = new System.Drawing.Point(6, 186);
+      this.cbxAllowAudioCapture.Name = "cbxAllowAudioCapture";
+      this.cbxAllowAudioCapture.Size = new System.Drawing.Size(214, 24);
+      this.cbxAllowAudioCapture.TabIndex = 5;
+      this.cbxAllowAudioCapture.Text = "Allow client audio capture";
+      // 
+      // cbxAllowVideoCapture
+      // 
+      this.cbxAllowVideoCapture.AutoSize = true;
+      this.cbxAllowVideoCapture.Location = new System.Drawing.Point(6, 216);
+      this.cbxAllowVideoCapture.Name = "cbxAllowVideoCapture";
+      this.cbxAllowVideoCapture.Size = new System.Drawing.Size(212, 24);
+      this.cbxAllowVideoCapture.TabIndex = 6;
+      this.cbxAllowVideoCapture.Text = "Allow client video capture";
+      // 
+      // cbxAllowPnp
+      // 
+      this.cbxAllowPnp.AutoSize = true;
+      this.cbxAllowPnp.Location = new System.Drawing.Point(274, 216);
+      this.cbxAllowPnp.Name = "cbxAllowPnp";
+      this.cbxAllowPnp.Size = new System.Drawing.Size(164, 24);
+      this.cbxAllowPnp.TabIndex = 15;
+      this.cbxAllowPnp.Text = "Allow PNP redirect";
+      // 
+      // cbxAllowPlaybackRedirect
+      // 
+      this.cbxAllowPlaybackRedirect.AutoSize = true;
+      this.cbxAllowPlaybackRedirect.Location = new System.Drawing.Point(6, 156);
+      this.cbxAllowPlaybackRedirect.Name = "cbxAllowPlaybackRedirect";
+      this.cbxAllowPlaybackRedirect.Size = new System.Drawing.Size(230, 24);
+      this.cbxAllowPlaybackRedirect.TabIndex = 4;
+      this.cbxAllowPlaybackRedirect.Text = "Allow host playback redirect";
+      // 
       // lblShadowMode
       // 
       this.lblShadowMode.AutoSize = true;
-      this.lblShadowMode.Location = new System.Drawing.Point(274, 126);
+      this.lblShadowMode.Location = new System.Drawing.Point(274, 149);
       this.lblShadowMode.Name = "lblShadowMode";
       this.lblShadowMode.Size = new System.Drawing.Size(193, 20);
-      this.lblShadowMode.TabIndex = 8;
+      this.lblShadowMode.TabIndex = 13;
       this.lblShadowMode.Text = "Session Shadowing Mode";
       // 
       // lblAuthMode
       // 
       this.lblAuthMode.AutoSize = true;
-      this.lblAuthMode.Location = new System.Drawing.Point(274, 63);
+      this.lblAuthMode.Location = new System.Drawing.Point(277, 95);
       this.lblAuthMode.Name = "lblAuthMode";
       this.lblAuthMode.Size = new System.Drawing.Size(156, 20);
-      this.lblAuthMode.TabIndex = 6;
+      this.lblAuthMode.TabIndex = 11;
       this.lblAuthMode.Text = "Authentication Mode";
       // 
       // gbxStatus
@@ -220,7 +294,7 @@ namespace rdpWrapper {
       this.gbxStatus.Controls.Add(this.lblServiceState);
       this.gbxStatus.Controls.Add(this.lblWrapperState);
       this.gbxStatus.Dock = System.Windows.Forms.DockStyle.Top;
-      this.gbxStatus.Location = new System.Drawing.Point(0, 36);
+      this.gbxStatus.Location = new System.Drawing.Point(0, 33);
       this.gbxStatus.Name = "gbxStatus";
       this.gbxStatus.Size = new System.Drawing.Size(552, 131);
       this.gbxStatus.TabIndex = 1;
@@ -254,10 +328,10 @@ namespace rdpWrapper {
             | System.Windows.Forms.AnchorStyles.Right)));
       this.txtServiceVersion.BorderStyle = System.Windows.Forms.BorderStyle.None;
       this.txtServiceVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-      this.txtServiceVersion.Location = new System.Drawing.Point(274, 32);
+      this.txtServiceVersion.Location = new System.Drawing.Point(270, 32);
       this.txtServiceVersion.Name = "txtServiceVersion";
       this.txtServiceVersion.ReadOnly = true;
-      this.txtServiceVersion.Size = new System.Drawing.Size(159, 19);
+      this.txtServiceVersion.Size = new System.Drawing.Size(163, 19);
       this.txtServiceVersion.TabIndex = 2;
       this.txtServiceVersion.TabStop = false;
       // 
@@ -342,16 +416,6 @@ namespace rdpWrapper {
       this.lblWrapperState.TabIndex = 4;
       this.lblWrapperState.Text = "Wrapper state:";
       // 
-      // txtLog
-      // 
-      this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
-      this.txtLog.Location = new System.Drawing.Point(0, 359);
-      this.txtLog.Name = "txtLog";
-      this.txtLog.ReadOnly = true;
-      this.txtLog.Size = new System.Drawing.Size(552, 183);
-      this.txtLog.TabIndex = 0;
-      this.txtLog.Text = "";
-      // 
       // mainMenu
       // 
       this.mainMenu.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
@@ -359,10 +423,11 @@ namespace rdpWrapper {
       this.mainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.toolsToolStripMenuItem,
+            this.preferencesToolStripMenuItem,
             this.helpToolStripMenuItem});
       this.mainMenu.Location = new System.Drawing.Point(0, 0);
       this.mainMenu.Name = "mainMenu";
-      this.mainMenu.Size = new System.Drawing.Size(552, 36);
+      this.mainMenu.Size = new System.Drawing.Size(552, 33);
       this.mainMenu.TabIndex = 11;
       this.mainMenu.Text = "menuStrip1";
       // 
@@ -370,54 +435,30 @@ namespace rdpWrapper {
       // 
       this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.testToolStripMenuItem,
-            this.addUserToolStripMenuItem,
-            this.manageUsersToolStripMenuItem,
-            this.manageUsersoldToolStripMenuItem,
             this.toolStripMenuItem2,
             this.exitToolStripMenuItem});
       this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-      this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 32);
+      this.fileToolStripMenuItem.Size = new System.Drawing.Size(54, 29);
       this.fileToolStripMenuItem.Text = "File";
-      // 
-      // addUserToolStripMenuItem
-      // 
-      this.addUserToolStripMenuItem.Name = "addUserToolStripMenuItem";
-      this.addUserToolStripMenuItem.Size = new System.Drawing.Size(270, 34);
-      this.addUserToolStripMenuItem.Text = "Create RD user";
-      this.addUserToolStripMenuItem.Click += new System.EventHandler(this.addUserToolStripMenuItem_Click);
-      // 
-      // manageUsersToolStripMenuItem
-      // 
-      this.manageUsersToolStripMenuItem.Name = "manageUsersToolStripMenuItem";
-      this.manageUsersToolStripMenuItem.Size = new System.Drawing.Size(270, 34);
-      this.manageUsersToolStripMenuItem.Text = "Manage users";
-      this.manageUsersToolStripMenuItem.Click += new System.EventHandler(this.manageUsersToolStripMenuItem_Click);
-      // 
-      // manageUsersoldToolStripMenuItem
-      // 
-      this.manageUsersoldToolStripMenuItem.Name = "manageUsersoldToolStripMenuItem";
-      this.manageUsersoldToolStripMenuItem.Size = new System.Drawing.Size(270, 34);
-      this.manageUsersoldToolStripMenuItem.Text = "Manage users (old)";
-      this.manageUsersoldToolStripMenuItem.Click += new System.EventHandler(this.manageUsersoldToolStripMenuItem_Click);
       // 
       // testToolStripMenuItem
       // 
       this.testToolStripMenuItem.Name = "testToolStripMenuItem";
       this.testToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.T)));
-      this.testToolStripMenuItem.Size = new System.Drawing.Size(270, 34);
+      this.testToolStripMenuItem.Size = new System.Drawing.Size(209, 34);
       this.testToolStripMenuItem.Text = "Test";
       this.testToolStripMenuItem.Click += new System.EventHandler(this.btnTest_Click);
       // 
       // toolStripMenuItem2
       // 
       this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-      this.toolStripMenuItem2.Size = new System.Drawing.Size(267, 6);
+      this.toolStripMenuItem2.Size = new System.Drawing.Size(206, 6);
       // 
       // exitToolStripMenuItem
       // 
       this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
       this.exitToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.W)));
-      this.exitToolStripMenuItem.Size = new System.Drawing.Size(270, 34);
+      this.exitToolStripMenuItem.Size = new System.Drawing.Size(209, 34);
       this.exitToolStripMenuItem.Text = "Exit";
       this.exitToolStripMenuItem.Click += new System.EventHandler(this.btnClose_Click);
       // 
@@ -426,52 +467,124 @@ namespace rdpWrapper {
       this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.installMenuItem,
             this.uninstallMenuItem,
-            this.generateMenuItem,
             this.restartServiceMenuItem,
+            this.generateMenuItem,
             this.toolStripMenuItem3,
-            this.themeMenuItem,
-            this.showLogToolStripMenuItem});
+            this.addUserToolStripMenuItem,
+            this.manageUsersToolStripMenuItem,
+            this.manageUsersoldToolStripMenuItem});
       this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-      this.toolsToolStripMenuItem.Size = new System.Drawing.Size(69, 32);
+      this.toolsToolStripMenuItem.Size = new System.Drawing.Size(69, 29);
       this.toolsToolStripMenuItem.Text = "Tools";
       // 
       // installMenuItem
       // 
       this.installMenuItem.Name = "installMenuItem";
-      this.installMenuItem.Size = new System.Drawing.Size(258, 34);
+      this.installMenuItem.Size = new System.Drawing.Size(265, 34);
       this.installMenuItem.Text = "Insrall";
       this.installMenuItem.Click += new System.EventHandler(this.btnInstall_Click);
       // 
       // uninstallMenuItem
       // 
       this.uninstallMenuItem.Name = "uninstallMenuItem";
-      this.uninstallMenuItem.Size = new System.Drawing.Size(258, 34);
+      this.uninstallMenuItem.Size = new System.Drawing.Size(265, 34);
       this.uninstallMenuItem.Text = "Uninstall";
       this.uninstallMenuItem.Click += new System.EventHandler(this.btnInstall_Click);
-      // 
-      // generateMenuItem
-      // 
-      this.generateMenuItem.Name = "generateMenuItem";
-      this.generateMenuItem.Size = new System.Drawing.Size(258, 34);
-      this.generateMenuItem.Text = "Generate \'wrap.ini\'";
-      this.generateMenuItem.Click += new System.EventHandler(this.btnGenerate_Click);
       // 
       // restartServiceMenuItem
       // 
       this.restartServiceMenuItem.Name = "restartServiceMenuItem";
-      this.restartServiceMenuItem.Size = new System.Drawing.Size(258, 34);
+      this.restartServiceMenuItem.Size = new System.Drawing.Size(265, 34);
       this.restartServiceMenuItem.Text = "Restart service";
       this.restartServiceMenuItem.Click += new System.EventHandler(this.btnRestartService_Click);
+      // 
+      // generateMenuItem
+      // 
+      this.generateMenuItem.Name = "generateMenuItem";
+      this.generateMenuItem.Size = new System.Drawing.Size(265, 34);
+      this.generateMenuItem.Text = "Generate \'wrap.ini\'";
+      this.generateMenuItem.Click += new System.EventHandler(this.btnGenerate_Click);
       // 
       // toolStripMenuItem3
       // 
       this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-      this.toolStripMenuItem3.Size = new System.Drawing.Size(255, 6);
+      this.toolStripMenuItem3.Size = new System.Drawing.Size(262, 6);
+      // 
+      // addUserToolStripMenuItem
+      // 
+      this.addUserToolStripMenuItem.Name = "addUserToolStripMenuItem";
+      this.addUserToolStripMenuItem.Size = new System.Drawing.Size(265, 34);
+      this.addUserToolStripMenuItem.Text = "Create RD user";
+      this.addUserToolStripMenuItem.Click += new System.EventHandler(this.addUserToolStripMenuItem_Click);
+      // 
+      // manageUsersToolStripMenuItem
+      // 
+      this.manageUsersToolStripMenuItem.Name = "manageUsersToolStripMenuItem";
+      this.manageUsersToolStripMenuItem.Size = new System.Drawing.Size(265, 34);
+      this.manageUsersToolStripMenuItem.Text = "Manage users";
+      this.manageUsersToolStripMenuItem.Click += new System.EventHandler(this.manageUsersToolStripMenuItem_Click);
+      // 
+      // manageUsersoldToolStripMenuItem
+      // 
+      this.manageUsersoldToolStripMenuItem.Name = "manageUsersoldToolStripMenuItem";
+      this.manageUsersoldToolStripMenuItem.Size = new System.Drawing.Size(265, 34);
+      this.manageUsersoldToolStripMenuItem.Text = "Manage users (old)";
+      this.manageUsersoldToolStripMenuItem.Click += new System.EventHandler(this.manageUsersoldToolStripMenuItem_Click);
+      // 
+      // preferencesToolStripMenuItem
+      // 
+      this.preferencesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.storeSeiingsInFileToolStripMenuItem,
+            this.wrapperToInstallMenuItem,
+            this.showAntivirusWarnMenuItem,
+            this.addDefenderExclusionMenuItem,
+            this.addFirewallRuleMenuItem,
+            this.toolStripMenuItem4,
+            this.themeMenuItem,
+            this.showLogToolStripMenuItem});
+      this.preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
+      this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(118, 29);
+      this.preferencesToolStripMenuItem.Text = "Preferences";
+      // 
+      // storeSeiingsInFileToolStripMenuItem
+      // 
+      this.storeSeiingsInFileToolStripMenuItem.Name = "storeSeiingsInFileToolStripMenuItem";
+      this.storeSeiingsInFileToolStripMenuItem.Size = new System.Drawing.Size(380, 34);
+      this.storeSeiingsInFileToolStripMenuItem.Text = "Store settings in file";
+      // 
+      // wrapperToInstallMenuItem
+      // 
+      this.wrapperToInstallMenuItem.Name = "wrapperToInstallMenuItem";
+      this.wrapperToInstallMenuItem.Size = new System.Drawing.Size(380, 34);
+      this.wrapperToInstallMenuItem.Text = "Preferred wrapper";
+      // 
+      // showAntivirusWarnMenuItem
+      // 
+      this.showAntivirusWarnMenuItem.Name = "showAntivirusWarnMenuItem";
+      this.showAntivirusWarnMenuItem.Size = new System.Drawing.Size(380, 34);
+      this.showAntivirusWarnMenuItem.Text = "Show antivirus warning";
+      // 
+      // addDefenderExclusionMenuItem
+      // 
+      this.addDefenderExclusionMenuItem.Name = "addDefenderExclusionMenuItem";
+      this.addDefenderExclusionMenuItem.Size = new System.Drawing.Size(380, 34);
+      this.addDefenderExclusionMenuItem.Text = "Add Defender exclusion";
+      // 
+      // addFirewallRuleMenuItem
+      // 
+      this.addFirewallRuleMenuItem.Name = "addFirewallRuleMenuItem";
+      this.addFirewallRuleMenuItem.Size = new System.Drawing.Size(380, 34);
+      this.addFirewallRuleMenuItem.Text = "Add firewall rule on port changed";
+      // 
+      // toolStripMenuItem4
+      // 
+      this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+      this.toolStripMenuItem4.Size = new System.Drawing.Size(377, 6);
       // 
       // themeMenuItem
       // 
       this.themeMenuItem.Name = "themeMenuItem";
-      this.themeMenuItem.Size = new System.Drawing.Size(258, 34);
+      this.themeMenuItem.Size = new System.Drawing.Size(380, 34);
       this.themeMenuItem.Text = "Themes";
       // 
       // showLogToolStripMenuItem
@@ -480,7 +593,7 @@ namespace rdpWrapper {
       this.showLogToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
       this.showLogToolStripMenuItem.Name = "showLogToolStripMenuItem";
       this.showLogToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F12;
-      this.showLogToolStripMenuItem.Size = new System.Drawing.Size(258, 34);
+      this.showLogToolStripMenuItem.Size = new System.Drawing.Size(380, 34);
       this.showLogToolStripMenuItem.Text = "Show log";
       // 
       // helpToolStripMenuItem
@@ -491,7 +604,7 @@ namespace rdpWrapper {
             this.siteToolStripMenuItem,
             this.aboutToolStripMenuItem});
       this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-      this.helpToolStripMenuItem.Size = new System.Drawing.Size(65, 32);
+      this.helpToolStripMenuItem.Size = new System.Drawing.Size(65, 29);
       this.helpToolStripMenuItem.Text = "Help";
       // 
       // checkFoNewVersionToolStripMenuItem
@@ -523,11 +636,21 @@ namespace rdpWrapper {
       this.aboutToolStripMenuItem.Text = "About";
       this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
       // 
+      // txtLog
+      // 
+      this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
+      this.txtLog.Location = new System.Drawing.Point(0, 412);
+      this.txtLog.Name = "txtLog";
+      this.txtLog.ReadOnly = true;
+      this.txtLog.Size = new System.Drawing.Size(552, 82);
+      this.txtLog.TabIndex = 0;
+      this.txtLog.Text = "";
+      // 
       // MainForm
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.ClientSize = new System.Drawing.Size(552, 542);
+      this.ClientSize = new System.Drawing.Size(552, 494);
       this.Controls.Add(this.txtLog);
       this.Controls.Add(this.gbxGeneralSettings);
       this.Controls.Add(this.gbxStatus);
@@ -539,9 +662,10 @@ namespace rdpWrapper {
       this.Name = "MainForm";
       this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
       this.Text = "RDP Wrapper";
-      ((System.ComponentModel.ISupportInitialize)(this.seRDPPort)).EndInit();
+      ((System.ComponentModel.ISupportInitialize)(this.numRDPPort)).EndInit();
       this.gbxGeneralSettings.ResumeLayout(false);
       this.gbxGeneralSettings.PerformLayout();
+      ((System.ComponentModel.ISupportInitialize)(this.numMaxConnections)).EndInit();
       this.gbxStatus.ResumeLayout(false);
       this.gbxStatus.PerformLayout();
       this.mainMenu.ResumeLayout(false);
@@ -557,7 +681,7 @@ namespace rdpWrapper {
     private CheckBox cbDontDisplayLastUser;
     private ComboBox rgNLAOptions;
     private ComboBox rgShadowOptions;
-    private NumericUpDown seRDPPort;
+    private NumericUpDown numRDPPort;
     private Label lRDPPort;
     private CheckBox cbxHonorLegacy;
     private System.Windows.Forms.GroupBox gbxGeneralSettings;
@@ -598,5 +722,18 @@ namespace rdpWrapper {
     private ToolStripMenuItem addUserToolStripMenuItem;
     private ToolStripMenuItem manageUsersToolStripMenuItem;
     private ToolStripMenuItem manageUsersoldToolStripMenuItem;
+    private ToolStripMenuItem preferencesToolStripMenuItem;
+    private ToolStripMenuItem storeSeiingsInFileToolStripMenuItem;
+    private ToolStripMenuItem wrapperToInstallMenuItem;
+    private ToolStripMenuItem showAntivirusWarnMenuItem;
+    private ToolStripMenuItem addDefenderExclusionMenuItem;
+    private ToolStripMenuItem addFirewallRuleMenuItem;
+    private CheckBox cbxAllowPnp;
+    private CheckBox cbxAllowPlaybackRedirect;
+    private CheckBox cbxAllowVideoCapture;
+    private CheckBox cbxAllowAudioCapture;
+    private ToolStripSeparator toolStripMenuItem4;
+    private Label lblMaxConnections;
+    private NumericUpDown numMaxConnections;
   }
 }

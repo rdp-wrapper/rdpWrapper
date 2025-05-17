@@ -21,6 +21,10 @@ namespace rdpWrapper {
     private readonly Logger logger;
     private readonly Wrapper wrapper;
     private readonly PersistentSettings settings;
+    private SupportedWrappers preferredWrapper;
+    private UserOption showAntivirusWarn;
+    private UserOption addDefenderExclusion;
+    private UserOption addFirewallRule;
 
     public MainForm() {
 
@@ -43,7 +47,6 @@ namespace rdpWrapper {
 
       var showLog = new UserOption("showLog", true, showLogToolStripMenuItem, settings);
       showLog.Changed += delegate {
-        showLogToolStripMenuItem.Checked = showLog.Value;
         if (showLogToolStripMenuItem.Checked) {
           FormBorderStyle = FormBorderStyle.Sizable;
           txtLog.Visible = true;
@@ -55,6 +58,28 @@ namespace rdpWrapper {
           txtLog.Visible = false;
         }
       };
+      var portable = new UserOption("portable", true, storeSeiingsInFileToolStripMenuItem, settings);
+      portable.Changed += delegate {
+        settings.IsPortable = portable.Value;
+      };
+      showAntivirusWarn = new UserOption("showAntivirusWarn", true, showAntivirusWarnMenuItem, settings);
+      addDefenderExclusion = new UserOption("addDefenderExclusion", true, addDefenderExclusionMenuItem, settings);
+      addFirewallRule = new UserOption("addFirewallRule", true, addFirewallRuleMenuItem, settings);
+
+      if (!Enum.TryParse(settings.GetValue("preferredWrapper", "TermWrap"), out preferredWrapper)){
+        preferredWrapper = SupportedWrappers.TermWrap;
+      }
+      foreach (SupportedWrappers wrap in Enum.GetValues(typeof(SupportedWrappers))) {
+        var menuItem = new ToolStripRadioButtonMenuItem(wrap.ToString(), null, (sender, e) => {
+          if (sender is not ToolStripRadioButtonMenuItem menuItem || !Enum.TryParse(menuItem.Text, out preferredWrapper))
+            return;
+          settings.SetValue("preferredWrapper", preferredWrapper.ToString());
+          menuItem.Checked = true;
+        });
+        wrapperToInstallMenuItem.DropDownItems.Add(menuItem);
+        if (wrap == preferredWrapper)
+          menuItem.Checked = true;
+      }
 
       logger = new Logger();
       logger.OnNewLogEvent += AddToLog;
@@ -89,15 +114,24 @@ namespace rdpWrapper {
         cbDontDisplayLastUser.CheckedChanged += (s, e) => { wrapper.DontDisplayLastUser = cbDontDisplayLastUser.Checked; };
         rgShadowOptions.SelectedIndexChanged += (s, e) => { wrapper.ShadowOptions = rgShadowOptions.SelectedIndex; };
         cbxHonorLegacy.CheckedChanged += (s, e) => { wrapper.HonorLegacy = cbxHonorLegacy.Checked; };
+        cbxAllowPlaybackRedirect.CheckedChanged += (s, e) => { wrapper.AllowHostPlaybackRedirect = cbxAllowPlaybackRedirect.Checked; };
+        cbxAllowAudioCapture.CheckedChanged += (s, e) => { wrapper.AllowClientAudioCapture = cbxAllowAudioCapture.Checked; };
+        cbxAllowVideoCapture.CheckedChanged += (s, e) => { wrapper.AllowClientVideoCapture = cbxAllowVideoCapture.Checked; };
+        cbxAllowPnp.CheckedChanged += (s, e) => { wrapper.AllowPnpRedirect = cbxAllowPnp.Checked; };
 
-        seRDPPort.ValueChanged += (s, e) => {
-          var newPort = (int)seRDPPort.Value;
+        numRDPPort.ValueChanged += (s, e) => {
+          var newPort = (int)numRDPPort.Value;
           if (oldPort != newPort) {
-            var p = Wrapper.StartProcess("netsh", $"advfirewall firewall set rule name=\"Remote Desktop\" new localport={newPort}");
-            p.WaitForExit();
-            logger.Log($"Firewall rule added for port {newPort}", Logger.StateKind.Info);
+            if (addFirewallRule.Value) {
+              var p = Wrapper.StartProcess("netsh", $"advfirewall firewall set rule name=\"Remote Desktop\" new localport={newPort}");
+              p.WaitForExit();
+              logger.Log($"Firewall rule added for port {newPort}", Logger.StateKind.Info);
+            }
             oldPort = wrapper.RdpPort = newPort;
           }
+        };
+        numMaxConnections.ValueChanged += (s, e) => {
+          wrapper.MaximumConnectionsAllowed = (int)numMaxConnections.Value;
         };
 
         rgNLAOptions.SelectedIndexChanged += (s, e) => {
@@ -156,7 +190,9 @@ namespace rdpWrapper {
         cbxSingleSessionPerUser.Checked = wrapper.SingleSessionPerUser;
         cbxAllowTSConnections.Checked = wrapper.AllowTsConnections;
         cbxHonorLegacy.Checked = wrapper.HonorLegacy;
-        seRDPPort.Value = oldPort = wrapper.RdpPort;
+        numRDPPort.Value = oldPort = wrapper.RdpPort;
+        numMaxConnections.Enabled = OperatingSystemHelper.IsWindowsServer;
+        numMaxConnections.Value = wrapper.MaximumConnectionsAllowed;
         
         rgNLAOptions.SelectedIndex = wrapper.SecurityLayer switch {
           0 when wrapper.UserAuthentication == 0 => 0,
@@ -167,6 +203,10 @@ namespace rdpWrapper {
 
         rgShadowOptions.SelectedIndex = wrapper.ShadowOptions;
         cbDontDisplayLastUser.Checked = wrapper.DontDisplayLastUser;
+        cbxAllowPlaybackRedirect.Checked = wrapper.AllowHostPlaybackRedirect;
+        cbxAllowAudioCapture.Checked = wrapper.AllowClientAudioCapture;
+        cbxAllowVideoCapture.Checked = wrapper.AllowClientVideoCapture;
+        cbxAllowPnp.Checked = wrapper.AllowPnpRedirect;
 
         logger.Log(" Done", Logger.StateKind.Info, false);
       }
@@ -200,7 +240,6 @@ namespace rdpWrapper {
       var setTheme = allThemes.FirstOrDefault(theme => settings.GetValue("theme", "auto") == theme.Id);
       if (setTheme != null) {
         Theme.Current = setTheme;
-        Theme.Current.Apply(this);
       }
 
       AddThemeMenuItems(allThemes.Where(t => t is not CustomTheme));
@@ -212,6 +251,8 @@ namespace rdpWrapper {
 
       if (setTheme == null && themeMenuItem.DropDownItems.Count > 0)
         themeMenuItem.DropDownItems[0].PerformClick();
+
+      Theme.Current.Apply(this);
     }
 
     private void AddThemeMenuItems(IEnumerable<Theme> themes) {
@@ -507,22 +548,10 @@ namespace rdpWrapper {
       SetControlsState(false);
       try {
         if (operation == "Install") {
-#if LITEVERSION
-        wrapper.Install();
-#else
-          var answer = MessageBox.Show("Choose:\n'Yes' - to install 'TermWrap'\n'No' - to install 'RdpWrap'\n'Cancel' - if you are not a confident person", Updater.ApplicationTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-          switch (answer) {
-            case DialogResult.Yes:
-              wrapper.Install(true);
-              break;
-            case DialogResult.No:
-              wrapper.Install(false);
-              break;
-            default:
-              return;
+          wrapper.Install(preferredWrapper, addDefenderExclusion.Value);
+          if (showAntivirusWarn.Value) {
+            MessageBox.Show($"Wrapper was installed in folder: '{wrapper.WrapperFolderPath}'\nYour antivirus software might block or interfere with wrapper folder.\nPlease verify that it is included in the exclusion list!", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
           }
-#endif
-          MessageBox.Show($"Wrapper was installed in folder: '{wrapper.WrapperFolderPath}'\nYour antivirus software might block or interfere with wrapper folder.\nPlease verify that it is included in the exclusion list!", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         else {
           wrapper.Uninstall();
