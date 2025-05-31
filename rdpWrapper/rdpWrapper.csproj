@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <OutputType>WinExe</OutputType>
     <Deterministic>false</Deterministic>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -43,28 +44,34 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <AssemblyName>rdpWrapper</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AssemblyName>rdpWrapper_x64</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|AnyCPU'">
     <AssemblyName>rdpWrapper_lite</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|x64'">
     <AssemblyName>rdpWrapper_x64_lite</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <AssemblyName>rdpWrapper_x86</AssemblyName>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|x86'">
     <AssemblyName>rdpWrapper_x86_lite</AssemblyName>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
