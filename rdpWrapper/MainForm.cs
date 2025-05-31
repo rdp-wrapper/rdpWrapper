@@ -1,4 +1,5 @@
-﻿using sergiye.Common;
+﻿using NetFwTypeLib;
+using sergiye.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,7 +25,7 @@ namespace rdpWrapper {
     private SupportedWrappers preferredWrapper;
     private UserOption showAntivirusWarn;
     private UserOption addDefenderExclusion;
-    private UserOption addFirewallRule;
+    private UserOption setFirewallRule;
 
     public MainForm() {
 
@@ -64,7 +65,7 @@ namespace rdpWrapper {
       };
       showAntivirusWarn = new UserOption("showAntivirusWarn", true, showAntivirusWarnMenuItem, settings);
       addDefenderExclusion = new UserOption("addDefenderExclusion", true, addDefenderExclusionMenuItem, settings);
-      addFirewallRule = new UserOption("addFirewallRule", true, addFirewallRuleMenuItem, settings);
+      setFirewallRule = new UserOption("setFirewallRule", true, addFirewallRuleMenuItem, settings);
 
       if (!Enum.TryParse(settings.GetValue("preferredWrapper", "TermWrap"), out preferredWrapper)){
         preferredWrapper = SupportedWrappers.TermWrap;
@@ -122,10 +123,50 @@ namespace rdpWrapper {
         numRDPPort.ValueChanged += (s, e) => {
           var newPort = (int)numRDPPort.Value;
           if (oldPort != newPort) {
-            if (addFirewallRule.Value) {
-              var p = Wrapper.StartProcess("netsh", $"advfirewall firewall set rule name=\"Remote Desktop\" new localport={newPort}");
-              p.WaitForExit();
-              logger.Log($"Firewall rule added for port {newPort}", Logger.StateKind.Info);
+            if (setFirewallRule.Value) {
+              try {
+                var tNetFwPolicy2 = Type.GetTypeFromProgID("HNetCfg.FwPolicy2");
+                var fwPolicy2 = (INetFwPolicy2)Activator.CreateInstance(tNetFwPolicy2);
+                var firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
+
+                INetFwRule inboundRule = null;
+                try {
+                  inboundRule = firewallPolicy.Rules.Item(Updater.ApplicationName);
+                }
+                catch (FileNotFoundException) {
+                  //ignore
+                  //if (inboundRule == null) {
+                  //  foreach (INetFwRule2 rule in firewallPolicy.Rules) {
+                  //    if (rule.Name == Updater.ApplicationName) {
+                  //      inboundRule = rule;
+                  //      break;
+                  //    }
+                  //  }
+                  //}
+                }
+                var createNewRule = inboundRule != null;
+                if (inboundRule == null) {
+                  inboundRule = (INetFwRule2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
+                  inboundRule.Name = Updater.ApplicationName;
+                }
+
+                inboundRule.Enabled = true;
+                inboundRule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
+                inboundRule.Protocol = 6; // TCP
+                inboundRule.LocalPorts = newPort.ToString();
+                inboundRule.Profiles = fwPolicy2.CurrentProfileTypes;
+
+                if (!createNewRule) {
+                  firewallPolicy.Rules.Add(inboundRule);
+                  logger.Log($"Firewall rule added for port {newPort}", Logger.StateKind.Info);
+                }
+                else {
+                  logger.Log($"Firewall rule updated to use port {newPort}", Logger.StateKind.Info);
+                }
+              }
+              catch (Exception ex) {
+                logger.Log($"Error configuring firewall: " + ex.Message, Logger.StateKind.Error);
+              }
             }
             oldPort = wrapper.RdpPort = newPort;
           }

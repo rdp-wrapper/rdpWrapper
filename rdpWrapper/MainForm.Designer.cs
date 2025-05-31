@@ -574,7 +574,7 @@ namespace rdpWrapper {
       // 
       this.addFirewallRuleMenuItem.Name = "addFirewallRuleMenuItem";
       this.addFirewallRuleMenuItem.Size = new System.Drawing.Size(380, 34);
-      this.addFirewallRuleMenuItem.Text = "Add firewall rule on port changed";
+      this.addFirewallRuleMenuItem.Text = "Set firewall rule on port changed";
       // 
       // toolStripMenuItem4
       // 

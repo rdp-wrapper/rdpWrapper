@@ -649,13 +649,17 @@ namespace rdpWrapper {
       try {
         var process = Process.Start(new ProcessStartInfo {
           FileName = "powershell",
-          Arguments = $"{(add ? "Add" : "Remove")}-MpPreference -ExclusionPath \"{folderPath}\"",
+          Arguments = $"{(add ? "Add" : "Remove")}-MpPreference -ExclusionPath '{folderPath}'",
           Verb = "runas",
           UseShellExecute = true
         });
         if (process != null) {
           process.WaitForExit();
-          return true;
+          if (process.ExitCode == 0) {
+            logger.Log("Defender folder exclusion configured", Logger.StateKind.Info);
+            return true;
+          }
+          return false;
         }
         else {
           logger.Log("UAC not confirmed by user.");

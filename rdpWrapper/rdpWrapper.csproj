@@ -114,7 +114,6 @@
     <Compile Include="..\..\common\sergiye.Common\ISettings.cs" Link="Common\ISettings.cs" />
     <Compile Include="..\..\common\sergiye.Common\Logger.cs" Link="Common\Logger.cs" />
     <Compile Include="..\..\common\sergiye.Common\OperatingSystemHelper.cs" Link="Common\OperatingSystemHelper.cs" />
-    <Compile Include="..\..\common\sergiye.Common\RegionHelper.cs" Link="Common\RegionHelper.cs" />
     <Compile Include="..\..\common\sergiye.Common.UI\PersistentSettings.cs" Link="Common\PersistentSettings.cs" />
     <Compile Include="..\..\common\sergiye.Common\SerializerHelper.cs" Link="Common\SerializerHelper.cs" />
     <Compile Include="..\..\common\sergiye.Common\ServiceHelper.cs" Link="Common\ServiceHelper.cs" />
@@ -123,6 +122,17 @@
     <Compile Include="..\..\common\sergiye.Common\Updater.cs" Link="Common\Updater.cs" />
     <Compile Include="..\..\common\sergiye.Common.UI\UserOption.cs" Link="Common\UserOption.cs" />
     <Compile Include="..\..\common\sergiye.Common\WinStationHelper.cs" Link="Common\WinStationHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="NetFwTypeLib">
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>1</VersionMajor>
+      <Guid>58fbcf7c-e7a9-467c-80b3-fc65e8fcca08</Guid>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>false</Isolated>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Update="MainForm.Designer.cs">
