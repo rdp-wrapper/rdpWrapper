@@ -1,7 +1,7 @@
-﻿using Microsoft.Win32;
-using sergiye.Common;
+﻿using sergiye.Common;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -26,6 +26,7 @@ namespace rdpWrapper {
     
     private static int result = CodeOk; //lets be a bit optimistic
     //private static bool consoleAllocated;
+    private static FileLogger logger;
 
     [STAThread]
     private static void Main(string[] args) {
@@ -34,15 +35,17 @@ namespace rdpWrapper {
 
       var consoleMode = args.Length > 0;
       if (consoleMode) {
+        logger = new FileLogger();
+        logger.OnNewLogEvent += AddToLog;
         //if (!AttachConsole(-1)) {
         //  consoleAllocated = AllocConsole();
         //}
-        Console.WriteLine($"{Updater.ApplicationTitle} {typeof(Program).Assembly.GetName().Version.ToString(3)} {(Environment.Is64BitProcess ? "x64" : "x32")}");
+        logger.Log($"{Updater.ApplicationTitle} {typeof(Program).Assembly.GetName().Version.ToString(3)} {(Environment.Is64BitProcess ? "x64" : "x32")}", Logger.StateKind.Info);
       }
 
       if (!OperatingSystemHelper.IsCompatible(true, out var errorMessage, out var fixAction)) {
         if (consoleMode) {
-          Console.WriteLine(errorMessage);
+          logger.Log(errorMessage, Logger.StateKind.Error);
         }
         else {
           if (fixAction != null) {
@@ -59,7 +62,7 @@ namespace rdpWrapper {
 
       if (Environment.Is64BitOperatingSystem != Environment.Is64BitProcess) {
         if (consoleMode) {
-          Console.WriteLine($"You are running an application build made for a different OS architecture.\nIt is not compatible!");
+          logger.Log($"You are running an application build made for a different OS architecture.\nIt is not compatible!", Logger.StateKind.Error);
         }
         else {
           if (MessageBox.Show($"You are running an application build made for a different OS architecture.\nIt is not compatible!\nWould you like to download correct version?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
@@ -82,37 +85,69 @@ namespace rdpWrapper {
     private static void StartConsole(string[] args) {
       try {
         // always check for an updated version of the application unless disabled by launch arguments
-        // "-o" parameter should not be the first one
-        var offline = args.Any(a => a == "-o");
+        // "-offline" should be the LAST parameter 
+        var offline = args.Any(a => a == "-offline");
         if (!offline) {
           Updater.CheckForUpdates(true);
         }
         switch (args[0]) {
-          case "-h":
+          case "-help":
             //todo: show help with supported options
-            Console.WriteLine("Usage:\n -x \t start UI and no wait for exit;\n -v \t validate Ini;\n -i \t install wrapper;\n -u \t uninstall wrapper");
+            logger.Log("Usage:\n -x \t start UI and no wait for exit;\n -generate \t generate Ini;\n -install \t install wrapper;\n -uninstall \t uninstall wrapper", Logger.StateKind.Info);
             break;
           case "-x":
             //start UI as a new separate process
             Process.Start(typeof(Program).Assembly.Location);
+            logger.Log("Started UI in a new process", Logger.StateKind.Info);
             break;
-          case "-v":
-            //if (wrapper installed & system version is not supported) -> generate new Ini 
-            throw new NotImplementedException();
-          case "-i": //install
-            throw new NotImplementedException();
-          case "-u": //uninstall
-            throw new NotImplementedException();
+          case "-generate": {
+#if LITEVERSION
+            logger.Log("No need for Ini file with TermWrap.");
+#else
+            //todo: check wrapper installed & wrapper is RdpWrap -> generate new Ini 
+            var wrapper = new Wrapper(logger);
+            string wrapperIniPath = Path.Combine(wrapper.WrapperFolderPath, Wrapper.RdpWrapIniName);
+            wrapper.GenerateIniFile(wrapperIniPath, true);
+#endif
+            break;
+          }
+          case "-install": {
+            var wrapper = new Wrapper(logger);
+            var settings = new PersistentSettings();
+            settings.Load();
+            if (!Enum.TryParse(settings.GetValue("preferredWrapper", "TermWrap"), out SupportedWrappers preferredWrapper)) {
+              preferredWrapper = SupportedWrappers.TermWrap;
+            }
+            wrapper.Install(preferredWrapper, true);
+            break;
+          }
+          case "-uninstall": {
+            var wrapper = new Wrapper(logger);
+            wrapper.Uninstall();
+            break;
+          }
+          case "-start": {
+            var wrapper = new Wrapper(logger);
+            wrapper.StartService(TimeSpan.FromSeconds(10));
+            break;
+          }
+          case "-stop": {
+            var wrapper = new Wrapper(logger);
+            wrapper.StopService(TimeSpan.FromSeconds(10));
+            break;
+          }
           default:
             result = CodeInvalidArgs;
             break;
         }
       }
       catch (Exception ex) {
-        Console.WriteLine("Error: " + ex.Message);
+        logger.Log("Error: " + ex.Message, Logger.StateKind.Error);
         result = CodeException;
       }
       finally {
+        logger?.Dispose();
+
         // SetConsoleCtrlHandler(null, false);
         // GenerateConsoleCtrlEvent(0, 0);
         // Process.GetCurrentProcess().StandardOutput.Close();
@@ -137,13 +172,29 @@ namespace rdpWrapper {
       Application.Run(form);
     }
 
-    private static bool IsVcRedistInstalled(string arch) {
-      var registryKey = @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\" + arch;
-      var view = (arch == "x64") ? RegistryView.Registry64 : RegistryView.Registry32;
-      using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view))
-      using (var key = baseKey.OpenSubKey(registryKey)) {
-        return key != null && key.GetValue("Installed") is int installed && installed == 1;
+    private static void AddToLog(string message, Logger.StateKind state, bool newLine) {
+
+      //Console.BackgroundColor = ConsoleColor.Black;
+      if (newLine) {
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.Write($"\n{DateTime.Now:T} - ");
       }
+
+      switch (state) {
+        case Logger.StateKind.Error:
+          Console.ForegroundColor = ConsoleColor.Red;
+          Console.Write(message);
+          break;
+        case Logger.StateKind.Info:
+          Console.ForegroundColor = ConsoleColor.White;
+          Console.Write(message);
+          break;
+        default:
+          Console.ForegroundColor = ConsoleColor.Gray;
+          Console.Write(message);
+          break;
+      }
+      Console.ResetColor();
     }
   }
 }
