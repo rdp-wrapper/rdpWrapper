@@ -1,6 +1,6 @@
 # RDP Wrapper
 [![Release](https://img.shields.io/github/v/release/rdp-wrapper/rdpWrapper?style=for-the-badge)](https://github.com/rdp-wrapper/rdpWrapper/releases/latest)
-![Downloads](https://img.shields.io/github/downloads/rdp-wrapper/rdpWrapper/total?style=for-the-badge&color=ff4f42)
+[![Downloads](https://img.shields.io/github/downloads/rdp-wrapper/rdpWrapper/total?style=for-the-badge&color=ff4f42)](https://sergiye.github.io/github-release-stats/?username=rdp-wrapper&repository=rdpWrapper&page=1&per_page=100)
 ![Last commit](https://img.shields.io/github/last-commit/rdp-wrapper/rdpWrapper?style=for-the-badge&color=00AD00)
 
 ----
@@ -28,6 +28,7 @@ The application is portable and has the following features:
  - RDP host server on any Windows edition beginning from Vista
  - Using the same user simultaneously for local and remote logon (see configuration app)
  - Console and remote sessions at the same time
+ - Enabled camera and USB redirection (when TermWrap installed)
  - show RDP service current status
  - configure RDP options
  - install / uninstall wrapper
@@ -52,10 +53,34 @@ Don't forget to restart the app to scan for new theme files!
 
 ## Download
 
-The published version can be obtained from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).**
+The published version can be obtained from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).
+
+
+
+## Notes
+
+### Enable USB redirection
+To enable remote desktop USB redirection, additional group policy settings are required (gpedit):
+
+`Computer Configuration\Administrative Templates\System\Device Installation` - `Allow remote access to the Plug and Play interface` -> Enabled
+
+`Computer Configuration\Administrative Templates\Windows Components\Remote Desktop Services\Remote Desktop Session Host\Device and Resource Redirection` - `Do not allow supported Plug and Play device redirection` -> Disabled
+
+`Computer Configuration\Administrative Templates\Windows Components\Remote Desktop Services\Remote Desktop Connection Client\RemoteFX USB Device Redirection` - `Allow RDP redirection of other supported RemoteFX USB devices from this computer` -> Enabled
+
+### Notes on audio recording redirection
+Just like UmWrap, EndpWrap is only needed on server and home editions. It gets loaded in all applications that play/record remote audio, and may cause some tricky applications to stuck or crash.
+
+To enable audio recording redirection, both EndpWrap.dll and Zydis.dll needs to be copied to the system32 folder. After that, change the following registry entry from rdpendp.dll to EndpWrap.dll:
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp\AudioEnumeratorDll
+
 
 ## How can I help improve it?
 The rdpWrapper team welcomes feedback and contributions!<br/>
 You can check if it works properly on your PC. If you notice any inaccuracies, please send us a pull request. If you have any suggestions or improvements, don't hesitate to create an issue.
 
 Also, don't forget to star the repository to help other people find it.
+
+## Donate!
+Every [cup of coffee](https://patreon.com/SergiyE) you donate will help this app become better and let me know that this project is in demand.

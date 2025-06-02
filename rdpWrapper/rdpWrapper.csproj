@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <OutputType>WinExe</OutputType>
     <Deterministic>false</Deterministic>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -11,49 +12,130 @@
     <ApplicationIcon>app.ico</ApplicationIcon>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
+    <Platforms>AnyCPU;x86;x64</Platforms>
+    <Configurations>Debug;Release;DebugLite;ReleaseLite</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AssemblyName>rdpWrapper</AssemblyName>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <AssemblyName>rdpWrapper_x64</AssemblyName>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLite|AnyCPU'">
+    <AssemblyName>rdpWrapper_lite</AssemblyName>
+    <DefineConstants>LITEVERSION</DefineConstants>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLite|x64'">
+    <AssemblyName>rdpWrapper_x64_lite</AssemblyName>
+    <DefineConstants>LITEVERSION</DefineConstants>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <AssemblyName>rdpWrapper_x86</AssemblyName>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLite|x86'">
+    <AssemblyName>rdpWrapper_lite_x86</AssemblyName>
+    <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AssemblyName>rdpWrapper</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="externals\x64\rdpwrap.dll" />
-    <None Remove="externals\x86\rdpwrap.dll" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <AssemblyName>rdpWrapper_x64</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|AnyCPU'">
+    <AssemblyName>rdpWrapper_lite</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <DefineConstants>LITEVERSION</DefineConstants>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|x64'">
+    <AssemblyName>rdpWrapper_x64_lite</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <DefineConstants>LITEVERSION</DefineConstants>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <AssemblyName>rdpWrapper_x86</AssemblyName>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|x86'">
+    <AssemblyName>rdpWrapper_x86_lite</AssemblyName>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <DefineConstants>LITEVERSION</DefineConstants>
+    <OutputPath>bin\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IsLiteVersion Condition=" '$(DefineConstants)' != '' and  '$(DefineConstants)' != '$(DefineConstants.Replace(`LITEVERSION`,``))' ">true</IsLiteVersion>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(IsLiteVersion)' != 'true'">
     <None Remove="externals\rdpwrap.ini" />
-    <None Remove="externals\x64\RDPWrapOffsetFinder.exe" />
+    <EmbeddedResource Include="externals\rdpwrap.ini" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsLiteVersion)' != 'true' And ('$(Platform)'=='x86' Or '$(Platform)'=='AnyCPU')">
+    <None Remove="externals\x86\rdpwrap.dll" />
     <None Remove="externals\x86\RDPWrapOffsetFinder.exe" />
+    <EmbeddedResource Include="externals\x86\rdpwrap.dll" />
+    <EmbeddedResource Include="externals\x86\RDPWrapOffsetFinder.exe" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsLiteVersion)' != 'true' And ('$(Platform)'=='x64' Or '$(Platform)'=='AnyCPU')">
+    <None Remove="externals\x64\rdpwrap.dll" />
+    <None Remove="externals\x64\RDPWrapOffsetFinder.exe" />
+    <EmbeddedResource Include="externals\x64\rdpwrap.dll" />
+    <EmbeddedResource Include="externals\x64\RDPWrapOffsetFinder.exe" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Platform)'=='x86' Or '$(Platform)'=='AnyCPU'">
+    <None Remove="externals\x86\Zydis.dll" />
+    <None Remove="externals\x86\TermWrap.dll" />
+    <EmbeddedResource Include="externals\x86\Zydis.dll" />
+    <EmbeddedResource Include="externals\x86\TermWrap.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Platform)'=='x64' Or '$(Platform)'=='AnyCPU'">
     <None Remove="externals\x64\Zydis.dll" />
     <None Remove="externals\x64\TermWrap.dll" />
     <None Remove="externals\x64\UmWrap.dll" />
-    <None Remove="externals\x86\Zydis.dll" />
-    <None Remove="externals\x86\TermWrap.dll" />
+    <EmbeddedResource Include="externals\x64\Zydis.dll" />
+    <EmbeddedResource Include="externals\x64\TermWrap.dll" />
+    <EmbeddedResource Include="externals\x64\UmWrap.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\common\Themes\CustomTheme.cs" Link="Common\Themes\CustomTheme.cs" />
-    <Compile Include="..\..\common\Themes\DarkTheme.cs" Link="Common\Themes\DarkTheme.cs" />
-    <Compile Include="..\..\common\Themes\LightTheme.cs" Link="Common\Themes\LightTheme.cs" />
-    <Compile Include="..\..\common\Themes\Theme.cs" Link="Common\Themes\Theme.cs" />
-    <Compile Include="..\..\common\Themes\ThemedToolStripRenderer.cs" Link="Common\Themes\ThemedToolStripRenderer.cs" />
-    <Compile Include="..\..\common\Crasher.cs" Link="Common\Crasher.cs" />
-    <Compile Include="..\..\common\ISettings.cs" Link="Common\ISettings.cs" />
-    <Compile Include="..\..\common\Logger.cs" Link="Common\Logger.cs" />
-    <Compile Include="..\..\common\OperatingSystemHelper.cs" Link="Common\OperatingSystemHelper.cs" />
-    <Compile Include="..\..\common\PersistentSettings.cs" Link="Common\PersistentSettings.cs" />
-    <Compile Include="..\..\common\SerializerHelper.cs" Link="Common\SerializerHelper.cs" />
-    <Compile Include="..\..\common\ServiceHelper.cs" Link="Common\ServiceHelper.cs" />
-    <Compile Include="..\..\common\SimplTextBox.cs" Link="Common\SimplTextBox.cs" />
-    <Compile Include="..\..\common\ToolStripRadioButtonMenuItem.cs" Link="Common\ToolStripRadioButtonMenuItem.cs" />
-    <Compile Include="..\..\common\Updater.cs" Link="Common\Updater.cs" />
-    <Compile Include="..\..\common\UserOption.cs" Link="Common\UserOption.cs" />
-    <Compile Include="..\..\common\WinStationHelper.cs" Link="Common\WinStationHelper.cs" />
+    <EmbeddedResource Include="..\themes\*.json" Link="themes\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\common\sergiye.Common.UI\Themes\CustomTheme.cs" Link="Common\Themes\CustomTheme.cs" />
+    <Compile Include="..\..\common\sergiye.Common.UI\Themes\DarkTheme.cs" Link="Common\Themes\DarkTheme.cs" />
+    <Compile Include="..\..\common\sergiye.Common.UI\Themes\LightTheme.cs" Link="Common\Themes\LightTheme.cs" />
+    <Compile Include="..\..\common\sergiye.Common.UI\Themes\Theme.cs" Link="Common\Themes\Theme.cs" />
+    <Compile Include="..\..\common\sergiye.Common.UI\Themes\ThemedToolStripRenderer.cs" Link="Common\Themes\ThemedToolStripRenderer.cs" />
+    <Compile Include="..\..\common\sergiye.Common\Crasher.cs" Link="Common\Crasher.cs" />
+    <Compile Include="..\..\common\sergiye.Common\ISettings.cs" Link="Common\ISettings.cs" />
+    <Compile Include="..\..\common\sergiye.Common\Logger.cs" Link="Common\Logger.cs" />
+    <Compile Include="..\..\common\sergiye.Common\OperatingSystemHelper.cs" Link="Common\OperatingSystemHelper.cs" />
+    <Compile Include="..\..\common\sergiye.Common.UI\PersistentSettings.cs" Link="Common\PersistentSettings.cs" />
+    <Compile Include="..\..\common\sergiye.Common\SerializerHelper.cs" Link="Common\SerializerHelper.cs" />
+    <Compile Include="..\..\common\sergiye.Common\ServiceHelper.cs" Link="Common\ServiceHelper.cs" />
+    <Compile Include="..\..\common\sergiye.Common.UI\SimplTextBox.cs" Link="Common\SimplTextBox.cs" />
+    <Compile Include="..\..\common\sergiye.Common.UI\ToolStripRadioButtonMenuItem.cs" Link="Common\ToolStripRadioButtonMenuItem.cs" />
+    <Compile Include="..\..\common\sergiye.Common\Updater.cs" Link="Common\Updater.cs" />
+    <Compile Include="..\..\common\sergiye.Common.UI\UserOption.cs" Link="Common\UserOption.cs" />
+    <Compile Include="..\..\common\sergiye.Common\WinStationHelper.cs" Link="Common\WinStationHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <EmbeddedResource Update="MainForm.resx">
+      <SubType>Designer</SubType>
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <Compile Update="*Form.cs">
@@ -62,26 +144,15 @@
     <Content Include="app.ico" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="externals\x64\rdpwrap.dll" />
-    <EmbeddedResource Include="externals\x86\rdpwrap.dll" />
-    <EmbeddedResource Include="externals\rdpwrap.ini" />
-    <EmbeddedResource Include="externals\x64\RDPWrapOffsetFinder.exe" />
-    <EmbeddedResource Include="externals\x86\RDPWrapOffsetFinder.exe" />
-    <EmbeddedResource Include="externals\x64\Zydis.dll" />
-    <EmbeddedResource Include="externals\x64\TermWrap.dll" />
-    <EmbeddedResource Include="externals\x64\UmWrap.dll" />
-    <EmbeddedResource Include="externals\x86\Zydis.dll" />
-    <EmbeddedResource Include="externals\x86\TermWrap.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Release'">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Release' Or '$(Configuration)' == 'ReleaseLite'">
     <Exec Command="for %%f in ($(OutDir)\*) do if not %%~xf==.exe del /S /Q &quot;%%f&quot;" />
   </Target>
 </Project>

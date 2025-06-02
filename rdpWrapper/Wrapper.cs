@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -16,6 +17,13 @@ namespace rdpWrapper {
     ThirdParty,
     RdpWrap,
     TermWrap,
+  }
+
+  internal enum SupportedWrappers {
+    TermWrap = 0,
+#if !LITEVERSION
+    RdpWrap = 1,
+#endif
   }
 
   internal class Wrapper {
@@ -34,6 +42,11 @@ namespace rdpWrapper {
     private const string ValueNla = "UserAuthentication";
     private const string ValueSecurity = "SecurityLayer";
     private const string ValueShadow = "Shadow";
+    private const string ValueDisableCam = "fDisableCam";
+    private const string ValueDisableCameraRedir = "fDisableCameraRedir";
+    private const string ValueDisableAudioCapture = "fDisableAudioCapture";
+    private const string ValueDisablePNPRedir = "fDisablePNPRedir";
+    private const string ValueUsbRedirectionEnableMode = "fUsbRedirectionEnableMode";
     
     private const string RdpServiceName = "TermService";
     
@@ -60,80 +73,266 @@ namespace rdpWrapper {
       else {
         TermSrvFile = Path.Combine(Environment.SystemDirectory, TermSrvName);
       }
-
-      ReadSettings();
     }
 
-    internal bool SingleSessionPerUser { get; set; }
-    internal bool AllowTsConnections { get; set; }
-    internal bool HonorLegacy { get; set; }
-    internal int RdpPort { get; set; }
-    internal int UserAuthentication { get; set; }
-    internal int SecurityLayer { get; set; }
-    internal int ShadowOptions { get; set; }
-    internal bool DontDisplayLastUser { get; set; }
+    internal bool SingleSessionPerUser { 
+      get {
+        var result = false;
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+          using (var key = baseKey.OpenSubKey(RegKey))
+            result = key != null && Convert.ToInt32(key.GetValue(ValueSingleSession, 0)) != 0;
+          using (var key = baseKey.OpenSubKey(RegTsKey))
+            result = result && (key != null && Convert.ToInt32(key.GetValue(ValueSingleSession, 0)) != 0);
+        }
+        return result;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)){
+          using (var key = baseKey.OpenSubKey(RegKey, writable: true))
+            key?.SetValue(ValueSingleSession, value ? 1 : 0, RegistryValueKind.DWord);
+          using (var key = baseKey.OpenSubKey(RegTsKey, writable: true))
+            key?.SetValue(ValueSingleSession, value ? 1 : 0, RegistryValueKind.DWord);
+        }
+      }
+    }
+
+    internal int MaximumConnectionsAllowed { 
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+          using (var key = baseKey.OpenSubKey(RegRdpKey)) {
+            if (key != null) {
+              var value = Convert.ToInt32(key.GetValue("MaxInstanceCount", -1));
+              if (value > 0)
+                return value;
+            }
+            return 0;
+          }
+        }
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)){
+          if (value > 0) {
+            using (var key = baseKey.OpenSubKey(RegRdpKey, writable: true))
+              key?.SetValue("MaxInstanceCount", value, RegistryValueKind.DWord); //max 999999
+            using (var key = baseKey.OpenSubKey(RegTsKey, writable: true)) {
+              //Enforce it (same effect as enabling the policy)
+              key?.SetValue("fPolicyLimitConnections", 1, RegistryValueKind.DWord);
+              key?.SetValue("MaxConnections", value, RegistryValueKind.DWord);
+            }
+          }
+          else {
+            using (var key = baseKey.OpenSubKey(RegTsKey, writable: true)) {
+              key?.DeleteValue("fPolicyLimitConnections");
+              key?.DeleteValue("MaxConnections");
+            }
+            using (var key = baseKey.OpenSubKey(RegRdpKey, writable: true))
+              key?.DeleteValue("MaxInstanceCount");
+          }
+        }
+      }
+    }
+
+    internal bool AllowTsConnections {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegKey))
+        return key != null
+            ? Convert.ToInt32(key.GetValue(ValueDenyTsConnections, 0)) == 0
+            : false;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegKey, writable: true))
+          key?.SetValue(ValueDenyTsConnections, value ? 0 : 1, RegistryValueKind.DWord);
+      }
+    }
+
+    internal bool HonorLegacy {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueHonorLegacy, 0)) != 0
+            : false;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegKey, writable: true))
+          key?.SetValue(ValueHonorLegacy, value ? 1 : 0, RegistryValueKind.DWord);
+      }
+    }
+
+    internal int RdpPort {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegRdpKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValuePort, 3389))
+            : 0;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegRdpKey, writable: true))
+          key?.SetValue(ValuePort, value, RegistryValueKind.DWord);
+      }
+    }
+
+    internal int UserAuthentication {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegRdpKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueNla, 0))
+            : 0;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegRdpKey, writable: true))
+          key?.SetValue(ValueNla, value, RegistryValueKind.DWord);
+      }
+    }
+
+    internal int SecurityLayer {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegRdpKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueSecurity, 0))
+            : 0;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegRdpKey, writable: true))
+          key?.SetValue(ValueSecurity, value, RegistryValueKind.DWord);
+      }
+    }
+
+    internal int ShadowOptions {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegRdpKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueShadow, 0))
+            : 0;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+          using (var key = baseKey.OpenSubKey(RegRdpKey, writable: true))
+            key?.SetValue(ValueShadow, value, RegistryValueKind.DWord);
+          using (var key = baseKey.OpenSubKey(RegTsKey, writable: true))
+            key?.SetValue(ValueShadow, value, RegistryValueKind.DWord);
+        }
+      }
+    }
+
+    internal bool DontDisplayLastUser {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegWinLogonKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueDontDisplayLastUserName, 0)) != 0
+            : false;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegWinLogonKey, writable: true))
+          key?.SetValue(ValueDontDisplayLastUserName, value ? 1 : 0, RegistryValueKind.DWord);
+      }
+    }
+
+    internal bool AllowHostPlaybackRedirect {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegTsKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueDisableCam, 1)) == 0
+            : false;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegTsKey, writable: true)) {
+          key?.SetValue(ValueDisableCam, value ? 0 : 1, RegistryValueKind.DWord);
+        }
+      }
+    }
+
+    internal bool AllowClientVideoCapture {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegTsKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueDisableCameraRedir, 1)) == 0
+            : false;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegTsKey, writable: true)) {
+          key?.SetValue(ValueDisableCameraRedir, value ? 0 : 1, RegistryValueKind.DWord);
+        }
+      }
+    }
+
+    internal bool AllowClientAudioCapture {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegTsKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueDisableAudioCapture, 0)) == 0
+            : false;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegTsKey, writable: true)) {
+          key?.SetValue(ValueDisableAudioCapture, value ? 0 : 1, RegistryValueKind.DWord);
+        }
+      }
+    }
+
+    internal bool AllowPnpRedirect {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegTsKey))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueDisablePNPRedir, 1)) == 0
+            : false;
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+          using (var key = baseKey.OpenSubKey(RegTsKey, writable: true))
+            key?.SetValue(ValueDisablePNPRedir, value ? 0 : 1, RegistryValueKind.DWord);
+        }
+      }
+    }
+
+    internal bool? RestrictUsbRedirection {
+      get {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView))
+        using (var key = baseKey.OpenSubKey(RegTsKey + "\\Client"))
+          return key != null
+            ? Convert.ToInt32(key.GetValue(ValueUsbRedirectionEnableMode, 1)) == 1
+            : null;
+        //1 => Adminstrators Only
+        //2 => Adminstrators and Users
+      }
+      set {
+        using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
+          using (var key = baseKey.OpenSubKey(RegTsKey + "\\Client", writable: true)) {
+            if (value.HasValue) {
+              key?.SetValue(ValueUsbRedirectionEnableMode, value.Value ? 1 : 2, RegistryValueKind.DWord);
+            }
+            else {
+              key?.DeleteValue(ValueUsbRedirectionEnableMode, false);
+            }
+          }
+        }
+      }
+    }
 
     internal string WrapperPath { get; private set; }
 
     internal readonly string TermSrvFile;
     internal readonly string WrapperFolderPath;
 
-    private void ReadSettings() {
-      using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
-        using (var key = baseKey.OpenSubKey(RegKey)) {
-          if (key != null) {
-            SingleSessionPerUser = Convert.ToInt32(key.GetValue(ValueSingleSession, 0)) != 0;
-            AllowTsConnections = Convert.ToInt32(key.GetValue(ValueDenyTsConnections, 0)) == 0;
-            HonorLegacy = Convert.ToInt32(key.GetValue(ValueHonorLegacy, 0)) != 0;
-          }
-        }
-
-        using (var key = baseKey.OpenSubKey(RegRdpKey)) {
-          if (key != null) {
-            RdpPort = Convert.ToInt32(key.GetValue(ValuePort, 3389));
-            UserAuthentication = Convert.ToInt32(key.GetValue(ValueNla, 0));
-            SecurityLayer = Convert.ToInt32(key.GetValue(ValueSecurity, 0));
-            ShadowOptions = Convert.ToInt32(key.GetValue(ValueShadow, 0));
-          }
-        }
-
-        using (var key = baseKey.OpenSubKey(RegWinLogonKey)) {
-          if (key != null)
-            DontDisplayLastUser = Convert.ToInt32(key.GetValue(ValueDontDisplayLastUserName, 0)) != 0;
-        }
-      }
-    }
-
-    internal void SaveSettings() {
-
-      using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
-        using (var key = baseKey.OpenSubKey(RegKey, writable: true)) {
-          if (key != null) {
-            key.SetValue(ValueSingleSession, SingleSessionPerUser ? 1 : 0, RegistryValueKind.DWord);
-            key.SetValue(ValueDenyTsConnections, AllowTsConnections ? 0 : 1, RegistryValueKind.DWord);
-            key.SetValue(ValueHonorLegacy, HonorLegacy ? 1 : 0, RegistryValueKind.DWord);
-          }
-        }
-
-        using (var key = baseKey.OpenSubKey(RegRdpKey, true)) {
-          if (key != null) {
-            key.SetValue(ValuePort, RdpPort, RegistryValueKind.DWord);
-            key.SetValue(ValueNla, UserAuthentication, RegistryValueKind.DWord);
-            key.SetValue(ValueSecurity, SecurityLayer, RegistryValueKind.DWord);
-            key.SetValue(ValueShadow, ShadowOptions, RegistryValueKind.DWord);
-          }
-        }
-
-        using (var key = baseKey.CreateSubKey(RegTsKey)) {
-          key?.SetValue(ValueShadow, ShadowOptions, RegistryValueKind.DWord);
-        }
-
-        using (var key = baseKey.CreateSubKey(RegWinLogonKey)) {
-          key?.SetValue(ValueDontDisplayLastUserName, DontDisplayLastUser ? 1 : 0, RegistryValueKind.DWord);
-        }
-      }
-    }
- 
     internal WrapperInstalledState CheckWrapperInstalled() {
       WrapperPath = string.Empty;
       try {
@@ -249,12 +448,7 @@ namespace rdpWrapper {
     }
 #endif
 
-#if LITEVERSION
-    internal void Install() {
-      const bool useTermWrap = true;
-#else
-    internal void Install(bool useTermWrap) {
-#endif
+    internal void Install(SupportedWrappers wrapToInstall, bool addDefenderExclusion) {
       //Uninstall();
       var prevServiceState = serviceHelper.GetServiceState(RdpServiceName);
       if (prevServiceState is ServiceControllerStatus.Running)
@@ -269,23 +463,32 @@ namespace rdpWrapper {
         "S-1-5-32-545", // SID for "Users"
       ] , FileSystemRights.FullControl, AccessControlType.Allow);
 
+      if (addDefenderExclusion && IsDefenderActive() && !IsFolderExcluded(WrapperFolderPath)) {
+        SetFolderExclusion(WrapperFolderPath);
+      }
+
       string wrapPath;
-      if (useTermWrap) {
-        wrapPath = ExtractResourceFile(TermWrapDllName, WrapperFolderPath, archPrefix: true);
-        logger.Log("Extracted TermWrap.dll -> " + wrapPath);
-        var zydis = ExtractResourceFile(ZydisDllName, WrapperFolderPath, archPrefix: true);
-        logger.Log("Extracted zydis.dll -> " + zydis);
-        if (Environment.Is64BitProcess) {
-          var umWrap = ExtractResourceFile(UmWrapDllName, WrapperFolderPath, archPrefix: true);
-          logger.Log("Extracted umWrap.dll -> " + umWrap);
-        }
-      }
+      switch (wrapToInstall) {
+        case SupportedWrappers.TermWrap:
+          wrapPath = ExtractResourceFile(TermWrapDllName, WrapperFolderPath, archPrefix: true);
+          logger.Log("Extracted TermWrap.dll -> " + wrapPath);
+          var zydis = ExtractResourceFile(ZydisDllName, WrapperFolderPath, archPrefix: true);
+          logger.Log("Extracted zydis.dll -> " + zydis);
+          if (Environment.Is64BitOperatingSystem) {
+            var umWrap = ExtractResourceFile(UmWrapDllName, WrapperFolderPath, archPrefix: true);
+            logger.Log("Extracted umWrap.dll -> " + umWrap);
+          }
+
+          break;
 #if !LITEVERSION
-      else {
-        wrapPath = ExtractResourceFile(RdpWrapDllName, WrapperFolderPath, archPrefix: true);
-        logger.Log("Extracted rdpWrap.dll -> " + wrapPath);
-      }
+        case SupportedWrappers.RdpWrap:
+          wrapPath = ExtractResourceFile(RdpWrapDllName, WrapperFolderPath, archPrefix: true);
+          logger.Log("Extracted rdpWrap.dll -> " + wrapPath);
+          break;
 #endif
+        default:
+          throw new NotSupportedException($"Wrapper of type '{wrapToInstall}' is not supported.");
+      }
 
       logger.Log("Configuring service library...");
       using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView)) {
@@ -298,7 +501,7 @@ namespace rdpWrapper {
         }
       }
 #if !LITEVERSION
-      if (!useTermWrap) {
+      if (wrapToInstall == SupportedWrappers.RdpWrap) {
         GenerateIniFile(Path.Combine(WrapperFolderPath, RdpWrapIniName));
       }
 #endif
@@ -352,7 +555,7 @@ namespace rdpWrapper {
         var type = GetType();
         
         var scriptsPath = archPrefix 
-          ? $"{type.Namespace}.externals.{(Environment.Is64BitProcess ? "x64" : "x86")}.{resourceName}"
+          ? $"{type.Namespace}.externals.{(Environment.Is64BitOperatingSystem ? "x64" : "x86")}.{resourceName}"
           : $"{type.Namespace}.externals.{resourceName}";
         using var stream = type.Assembly.GetManifestResourceStream(scriptsPath);
         using var fileStream = File.Create(filePath);
@@ -399,7 +602,85 @@ namespace rdpWrapper {
       }
       dInfo.SetAccessControl(dSecurity);
     }
-    
+
+    private bool IsDefenderActive() {
+      try {
+        using var process = Process.Start(new ProcessStartInfo {
+          FileName = "powershell",
+          Arguments = "Get-MpComputerStatus | Select-Object -ExpandProperty AMServiceEnabled",
+          RedirectStandardOutput = true,
+          UseShellExecute = false,
+          CreateNoWindow = true
+        });
+        string output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit();
+        var isActive = output.Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
+        logger.Log("Defender is " + (isActive ? "active" : "not active"), Logger.StateKind.Log);
+        return isActive;
+      }
+      catch (Exception ex) {
+        logger.Log("Error checking is defender active: " + ex.Message, Logger.StateKind.Error);
+        return false;
+      }
+    }
+
+    private bool IsFolderExcluded(string folderPath) {
+      try {
+        using var process = Process.Start(new ProcessStartInfo {
+          FileName = "powershell",
+          Arguments = "Get-MpPreference | Select-Object -ExpandProperty ExclusionPath",
+          RedirectStandardOutput = true,
+          UseShellExecute = false,
+          CreateNoWindow = true
+        });
+        string output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit();
+        return output
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim()).Any(p => string.Equals(p, folderPath, StringComparison.OrdinalIgnoreCase));
+      }
+      catch (Exception ex) {
+        logger.Log("Error checking is folder excluded: " + ex.Message, Logger.StateKind.Error);
+        return false;
+      }
+    }
+
+    private bool SetFolderExclusion(string folderPath, bool add = true) {
+      try {
+        var process = Process.Start(new ProcessStartInfo {
+          FileName = "powershell",
+          Arguments = $"{(add ? "Add" : "Remove")}-MpPreference -ExclusionPath '{folderPath}'",
+          Verb = "runas",
+          UseShellExecute = true
+        });
+        if (process != null) {
+          process.WaitForExit();
+          if (process.ExitCode == 0) {
+            logger.Log("Defender folder exclusion configured", Logger.StateKind.Info);
+            return true;
+          }
+          return false;
+        }
+        else {
+          logger.Log("UAC not confirmed by user.");
+          return false;
+        }
+      }
+      catch (System.ComponentModel.Win32Exception ex) {
+        if (ex.NativeErrorCode == 1223) {
+          logger.Log("UAC not confirmed by user", Logger.StateKind.Error);
+        }
+        else {
+          logger.Log($"Error starting command: {ex.Message}", Logger.StateKind.Error);
+        }
+        return false;
+      }
+      catch (Exception ex) {
+        logger.Log("Error changing exclusion: " + ex.Message, Logger.StateKind.Error);
+        return false;
+      }
+    }
+
     #endregion
   }
 }
