@@ -3,7 +3,6 @@ using sergiye.Common;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace rdpWrapper {
@@ -13,12 +12,12 @@ namespace rdpWrapper {
     private const int CodeOk = 0;
     private const int CodeInvalidArgs = 1;
     
-    [DllImport("kernel32.dll")]
-    private static extern bool AttachConsole(int dwProcessId);
-    [DllImport("kernel32.dll")]
-    private static extern bool AllocConsole();
-    [DllImport("kernel32.dll")]
-    private static extern bool FreeConsole();
+    //[DllImport("kernel32.dll")]
+    //private static extern bool AttachConsole(int dwProcessId);
+    //[DllImport("kernel32.dll")]
+    //private static extern bool AllocConsole();
+    //[DllImport("kernel32.dll")]
+    //private static extern bool FreeConsole();
     // [DllImport("kernel32.dll")]
     // private static extern bool GenerateConsoleCtrlEvent(uint dwCtrlEvent, uint dwProcessGroupId);
     // [DllImport("kernel32.dll")]
@@ -26,7 +25,7 @@ namespace rdpWrapper {
     // delegate Boolean ConsoleCtrlDelegate(uint ctrlType);
     
     private static int result = CodeOk; //lets be a bit optimistic
-    private static bool consoleAllocated;
+    //private static bool consoleAllocated;
 
     [STAThread]
     private static void Main(string[] args) {
@@ -35,47 +34,39 @@ namespace rdpWrapper {
 
       var consoleMode = args.Length > 0;
       if (consoleMode) {
-        if (!AttachConsole(-1)) {
-          consoleAllocated = AllocConsole();
-        }
+        //if (!AttachConsole(-1)) {
+        //  consoleAllocated = AllocConsole();
+        //}
         Console.WriteLine($"{Updater.ApplicationTitle} {typeof(Program).Assembly.GetName().Version.ToString(3)} {(Environment.Is64BitProcess ? "x64" : "x32")}");
       }
 
-      if (!OperatingSystemHelper.IsCompatible()) {
-        const string message = "The application is not compatible with your region.";
-        if (consoleMode)
-          Console.WriteLine(message);
-        else
-          MessageBox.Show(message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      if (!OperatingSystemHelper.IsCompatible(true, out var errorMessage, out var fixAction)) {
+        if (consoleMode) {
+          Console.WriteLine(errorMessage);
+        }
+        else {
+          if (fixAction != null) {
+            if (MessageBox.Show(errorMessage, Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
+              fixAction?.Invoke();
+            }
+          }
+          else {
+            MessageBox.Show(errorMessage, Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+          }
+        }
         Environment.Exit(0);
       }
 
-      var sysArch = Environment.Is64BitOperatingSystem ? "x64" : "x86";
-      var appArch = Environment.Is64BitProcess ? "x64" : "x86";
-      if (sysArch != appArch) {
+      if (Environment.Is64BitOperatingSystem != Environment.Is64BitProcess) {
         if (consoleMode) {
-          Console.WriteLine($"You are running {appArch} application on {sysArch} OS. It is not compatible!");
-          Environment.Exit(0);
+          Console.WriteLine($"You are running an application build made for a different OS architecture.\nIt is not compatible!");
         }
         else {
-          var answer = MessageBox.Show($"You are running {appArch} application on {sysArch} OS.\nIt may not be compatible!\nWould you like to download correct version?", Updater.ApplicationName, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
-          switch (answer) {
-            case DialogResult.Yes:
-              Updater.VisitAppSite("releases");
-              return;
-            case DialogResult.No:
-              break;
-            case DialogResult.Cancel:
-              return;
+          if (MessageBox.Show($"You are running an application build made for a different OS architecture.\nIt is not compatible!\nWould you like to download correct version?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
+            Updater.VisitAppSite("releases");
           }
         }
-      }
-
-      if (!IsVcRedistInstalled(sysArch)) {
-        if (MessageBox.Show("Microsoft Visual C++ 2015-2022 Redistributable is not installed.\nWould you like to download it now?", Updater.ApplicationName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) {
-          Process.Start($"https://aka.ms/vs/17/release/vc_redist.{sysArch}.exe");
-        }
-        Environment.Exit(1);
+        Environment.Exit(0);
       }
 
       if (consoleMode) {
@@ -127,9 +118,9 @@ namespace rdpWrapper {
         // Process.GetCurrentProcess().StandardOutput.Close();
         // Process.GetCurrentProcess().StandardInput.Close();
 
-        if (consoleAllocated) {
-          FreeConsole();
-        }
+        //if (consoleAllocated) {
+        //  FreeConsole();
+        //}
 
         // Console.Out.Close();
         // Console.Error.Close();
