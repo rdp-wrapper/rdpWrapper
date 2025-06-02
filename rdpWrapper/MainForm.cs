@@ -1,5 +1,4 @@
-﻿using NetFwTypeLib;
-using sergiye.Common;
+﻿using sergiye.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -125,39 +124,28 @@ namespace rdpWrapper {
           if (oldPort != newPort) {
             if (setFirewallRule.Value) {
               try {
-                var tNetFwPolicy2 = Type.GetTypeFromProgID("HNetCfg.FwPolicy2");
-                var fwPolicy2 = (INetFwPolicy2)Activator.CreateInstance(tNetFwPolicy2);
-                var firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
-
-                INetFwRule inboundRule = null;
+                dynamic fwPolicy = Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2")); //INetFwPolicy2
+                dynamic inboundRule = null; //INetFwRule
                 try {
-                  inboundRule = firewallPolicy.Rules.Item(Updater.ApplicationName);
+                  inboundRule = fwPolicy.Rules.Item(Updater.ApplicationName);
                 }
                 catch (FileNotFoundException) {
                   //ignore
-                  //if (inboundRule == null) {
-                  //  foreach (INetFwRule2 rule in firewallPolicy.Rules) {
-                  //    if (rule.Name == Updater.ApplicationName) {
-                  //      inboundRule = rule;
-                  //      break;
-                  //    }
-                  //  }
-                  //}
                 }
                 var createNewRule = inboundRule != null;
                 if (inboundRule == null) {
-                  inboundRule = (INetFwRule2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
+                  inboundRule = Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
                   inboundRule.Name = Updater.ApplicationName;
                 }
 
                 inboundRule.Enabled = true;
-                inboundRule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
+                inboundRule.Action = 1;// NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
                 inboundRule.Protocol = 6; // TCP
                 inboundRule.LocalPorts = newPort.ToString();
-                inboundRule.Profiles = fwPolicy2.CurrentProfileTypes;
+                inboundRule.Profiles = fwPolicy.CurrentProfileTypes;
 
                 if (!createNewRule) {
-                  firewallPolicy.Rules.Add(inboundRule);
+                  fwPolicy.Rules.Add(inboundRule);
                   logger.Log($"Firewall rule added for port {newPort}", Logger.StateKind.Info);
                 }
                 else {
