@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.ServiceProcess;
 using System.Windows.Forms;
+using WindowsFirewallHelper;
 using Timer = System.Windows.Forms.Timer;
 
 namespace rdpWrapper {
@@ -120,35 +121,20 @@ namespace rdpWrapper {
         cbxAllowPnp.CheckedChanged += (s, e) => { wrapper.AllowPnpRedirect = cbxAllowPnp.Checked; };
 
         numRDPPort.ValueChanged += (s, e) => {
-          var newPort = (int)numRDPPort.Value;
+          var newPort = (ushort)numRDPPort.Value;
           if (oldPort != newPort) {
             if (setFirewallRule.Value) {
               try {
-                dynamic fwPolicy = Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2")); //INetFwPolicy2
-                dynamic inboundRule = null; //INetFwRule
-                try {
-                  inboundRule = fwPolicy.Rules.Item(Updater.ApplicationName);
-                }
-                catch (FileNotFoundException) {
-                  //ignore
-                }
+                var allRules = FirewallManager.Instance.Rules;
+                var inboundRule = allRules.FirstOrDefault(r => r.Name == Updater.ApplicationName);
                 var createNewRule = inboundRule != null;
                 if (inboundRule == null) {
-                  inboundRule = Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
-                  inboundRule.Name = Updater.ApplicationName;
-                }
-
-                inboundRule.Enabled = true;
-                inboundRule.Action = 1;// NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                inboundRule.Protocol = 6; // TCP
-                inboundRule.LocalPorts = newPort.ToString();
-                inboundRule.Profiles = fwPolicy.CurrentProfileTypes;
-
-                if (!createNewRule) {
-                  fwPolicy.Rules.Add(inboundRule);
+                  inboundRule = FirewallManager.Instance.CreatePortRule(Updater.ApplicationName, FirewallAction.Allow, newPort, FirewallProtocol.TCP);
+                  FirewallManager.Instance.Rules.Add(inboundRule);
                   logger.Log($"Firewall rule added for port {newPort}", Logger.StateKind.Info);
                 }
                 else {
+                  inboundRule.LocalPorts = [newPort];
                   logger.Log($"Firewall rule updated to use port {newPort}", Logger.StateKind.Info);
                 }
               }
