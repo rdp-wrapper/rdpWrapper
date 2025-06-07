@@ -18,6 +18,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AssemblyName>rdpWrapper</AssemblyName>
     <OutputPath>bin\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AssemblyName>rdpWrapper_x64</AssemblyName>
@@ -27,6 +28,7 @@
     <AssemblyName>rdpWrapper_lite</AssemblyName>
     <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLite|x64'">
     <AssemblyName>rdpWrapper_x64_lite</AssemblyName>
@@ -46,34 +48,42 @@
     <AssemblyName>rdpWrapper</AssemblyName>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <OutputPath>bin\</OutputPath>
+    <Optimize>True</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AssemblyName>rdpWrapper_x64</AssemblyName>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <OutputPath>bin\</OutputPath>
+    <Optimize>True</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|AnyCPU'">
     <AssemblyName>rdpWrapper_lite</AssemblyName>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
+    <Optimize>True</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|x64'">
     <AssemblyName>rdpWrapper_x64_lite</AssemblyName>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
+    <Optimize>True</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <AssemblyName>rdpWrapper_x86</AssemblyName>
     <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <OutputPath>bin\</OutputPath>
+    <Optimize>True</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLite|x86'">
     <AssemblyName>rdpWrapper_x86_lite</AssemblyName>
     <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <DefineConstants>LITEVERSION</DefineConstants>
     <OutputPath>bin\</OutputPath>
+    <Optimize>True</Optimize>
   </PropertyGroup>
   <PropertyGroup>
     <IsLiteVersion Condition=" '$(DefineConstants)' != '' and  '$(DefineConstants)' != '$(DefineConstants.Replace(`LITEVERSION`,``))' ">true</IsLiteVersion>
