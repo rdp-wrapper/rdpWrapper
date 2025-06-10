@@ -329,19 +329,19 @@ namespace rdpWrapper {
       switch (wrapperInstalled) {
         case WrapperInstalledState.Unknown:
           lblWrapperStateValue.Text = "Unknown";
-          lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
+          lblWrapperStateValue.ForeColor = Theme.Current.InfoColor;
           uninstallMenuItem.Enabled = installMenuItem.Enabled = btnInstall.Enabled = btnInstall.Visible = false;
           break;
         case WrapperInstalledState.NotInstalled:
           lblWrapperStateValue.Text = "Not installed";
-          lblWrapperStateValue.ForeColor = Theme.Current.StatusInfoColor;
+          lblWrapperStateValue.ForeColor = Theme.Current.InfoColor;
           installMenuItem.Enabled = btnInstall.Enabled = btnInstall.Visible = true;
           uninstallMenuItem.Enabled = false;
           btnInstall.Text = "Install";
           break;
         case WrapperInstalledState.RdpWrap:
           lblWrapperStateValue.Text = "RdpWrap";
-          lblWrapperStateValue.ForeColor = Theme.Current.StatusOkColor;
+          lblWrapperStateValue.ForeColor = Theme.Current.MessageColor;
           string wrapperIniPath = null;
           if (!string.IsNullOrEmpty(wrapper.WrapperPath)) {
             var wrappedDir = Path.GetDirectoryName(wrapper.WrapperPath);
@@ -360,12 +360,12 @@ namespace rdpWrapper {
           break;
         case WrapperInstalledState.ThirdParty:
           lblWrapperStateValue.Text = "3rd-party";
-          lblWrapperStateValue.ForeColor = Theme.Current.StatusErrorColor;
+          lblWrapperStateValue.ForeColor = Theme.Current.WarnColor;
           uninstallMenuItem.Enabled = installMenuItem.Enabled = btnInstall.Enabled = btnInstall.Visible = false;
           break;
         case WrapperInstalledState.TermWrap:
           lblWrapperStateValue.Text = "TermWrap";
-          lblWrapperStateValue.ForeColor = Theme.Current.StatusOkColor;
+          lblWrapperStateValue.ForeColor = Theme.Current.MessageColor;
           checkSupported = null;
           wrapperIniLastChecked = DateTime.MinValue;
           wrapperIniLastPath = null;
@@ -378,7 +378,7 @@ namespace rdpWrapper {
       switch (wrapper.GetServiceState()) {
         case ServiceControllerStatus.Stopped:
           lblServiceStateValue.Text = "Stopped";
-          lblServiceStateValue.ForeColor = Theme.Current.StatusErrorColor;
+          lblServiceStateValue.ForeColor = Theme.Current.WarnColor;
           break;
         case ServiceControllerStatus.StartPending:
           lblServiceStateValue.Text = "Starting..";
@@ -390,7 +390,7 @@ namespace rdpWrapper {
           break;
         case ServiceControllerStatus.Running:
           lblServiceStateValue.Text = "Running";
-          lblServiceStateValue.ForeColor = Theme.Current.StatusOkColor;
+          lblServiceStateValue.ForeColor = Theme.Current.MessageColor;
           break;
         case ServiceControllerStatus.ContinuePending:
           lblServiceStateValue.Text = "Resuming...";
@@ -412,16 +412,16 @@ namespace rdpWrapper {
 
       if (WinStationHelper.IsListenerWorking()){
         lblListenerStateValue.Text = "Listening";
-        lblListenerStateValue.ForeColor = Theme.Current.StatusOkColor;
+        lblListenerStateValue.ForeColor = Theme.Current.MessageColor;
       }
       else {
         lblListenerStateValue.Text = "Not listening";
-        lblListenerStateValue.ForeColor = Theme.Current.StatusErrorColor;
+        lblListenerStateValue.ForeColor = Theme.Current.WarnColor;
       }
 
       if (string.IsNullOrEmpty(wrapper.WrapperPath) || !File.Exists(wrapper.WrapperPath)) {
         lblWrapperVersion.Text = "N/A";
-        lblWrapperVersion.ForeColor = Theme.Current.StatusErrorColor;
+        lblWrapperVersion.ForeColor = Theme.Current.WarnColor;
       }
       else {
         var versionInfo = FileVersionInfo.GetVersionInfo(wrapper.WrapperPath);
@@ -431,7 +431,7 @@ namespace rdpWrapper {
 
       if (!File.Exists(wrapper.TermSrvFile)) {
         txtServiceVersion.Text = "N/A";
-        txtServiceVersion.ForeColor = Theme.Current.StatusErrorColor;
+        txtServiceVersion.ForeColor = Theme.Current.WarnColor;
       }
       else {
         var versionInfo = FileVersionInfo.GetVersionInfo(wrapper.TermSrvFile);
@@ -448,7 +448,7 @@ namespace rdpWrapper {
           if (versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 0 ||
               versionInfo.FileMajorPart == 6 && versionInfo.FileMinorPart == 1) {
             lblSupported.Text = "[supported partially]";
-            lblSupported.ForeColor = Theme.Current.StatusInfoColor;
+            lblSupported.ForeColor = Theme.Current.InfoColor;
           }
           else {
             var lastModified = File.GetLastWriteTime(wrapperIniLastPath);
@@ -459,16 +459,16 @@ namespace rdpWrapper {
             }
             if (wrapperIniLastSupported) {
               lblSupported.Text = "[fully supported]";
-              lblSupported.ForeColor = Theme.Current.StatusOkColor;
+              lblSupported.ForeColor = Theme.Current.MessageColor;
               return;
             }
           }
           lblSupported.Text = "[not supported]";
-          lblSupported.ForeColor = Theme.Current.StatusErrorColor;
+          lblSupported.ForeColor = Theme.Current.WarnColor;
         }
         else if (!checkSupported.HasValue) {
           lblSupported.Text = "[supported]";
-          lblSupported.ForeColor = Theme.Current.StatusOkColor;
+          lblSupported.ForeColor = Theme.Current.MessageColor;
         }
       }
     }
@@ -555,10 +555,10 @@ namespace rdpWrapper {
         txtLog.AppendLine($"{DateTime.Now:T} - ", Theme.Current.ForegroundColor);
       switch (state) {
         case Logger.StateKind.Error:
-          txtLog.AppendLine(message, Theme.Current.StatusErrorColor, false);
+          txtLog.AppendLine(message, Theme.Current.WarnColor, false);
           break;
         case Logger.StateKind.Info:
-          txtLog.AppendLine(message, Theme.Current.StatusOkColor, false);
+          txtLog.AppendLine(message, Theme.Current.MessageColor, false);
           break;
         default:
           txtLog.AppendLine(message, Theme.Current.ForegroundColor, false);
