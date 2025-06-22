@@ -599,9 +599,8 @@ namespace rdpWrapper {
       // helpToolStripMenuItem
       // 
       this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.checkFoNewVersionToolStripMenuItem,
-            this.toolStripMenuItem1,
             this.siteToolStripMenuItem,
+            this.checkFoNewVersionToolStripMenuItem,
             this.aboutToolStripMenuItem});
       this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
       this.helpToolStripMenuItem.Size = new System.Drawing.Size(65, 29);

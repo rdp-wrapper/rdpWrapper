@@ -209,7 +209,7 @@ namespace rdpWrapper {
     }
 
     private void aboutToolStripMenuItem_Click(object sender, EventArgs e) {
-      MessageBox.Show($"{Updater.ApplicationTitle} {Updater.CurrentVersion} {(Environment.Is64BitProcess ? "x64" : "x32")}\nWritten by Sergiy Egoshyn (egoshin.sergey@gmail.com)", Updater.ApplicationTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+      Updater.ShowAbout();
     }
 
     private void RefreshSystemSettings() {
@@ -254,55 +254,19 @@ namespace rdpWrapper {
 
       mainMenu.Renderer = new ThemedToolStripRenderer();
 
-      if (Theme.SupportsAutoThemeSwitching()) {
-        var autoThemeMenuItem = new ToolStripRadioButtonMenuItem("Auto");
-        autoThemeMenuItem.Click += (o, e) => {
-          autoThemeMenuItem.Checked = true;
-          Theme.SetAutoTheme();
-          settings.SetValue("theme", "auto");
-        };
-        themeMenuItem.DropDownItems.Add(autoThemeMenuItem);
-      }
-
-      var allThemes = CustomTheme.GetAllThemes("themes", "rdpWrapper.themes").OrderBy(x => x.DisplayName).ToList();
-
-      var setTheme = allThemes.FirstOrDefault(theme => settings.GetValue("theme", "auto") == theme.Id);
-      if (setTheme != null) {
-        Theme.Current = setTheme;
-      }
-
-      AddThemeMenuItems(allThemes.Where(t => t is not CustomTheme));
-      var customThemes = allThemes.Where(t => t is CustomTheme).ToList();
-      if (customThemes.Count > 0) {
-        themeMenuItem.DropDownItems.Add("-");
-        AddThemeMenuItems(customThemes);
-      }
-
-      if (setTheme == null && themeMenuItem.DropDownItems.Count > 0)
-        themeMenuItem.DropDownItems[0].PerformClick();
-
-      Theme.Current.Apply(this);
-    }
-
-    private void AddThemeMenuItems(IEnumerable<Theme> themes) {
-      foreach (var theme in themes) {
-        var item = new ToolStripRadioButtonMenuItem(theme.DisplayName);
-        item.Tag = theme;
-        item.Click += OnThemeMenuItemClick;
-        themeMenuItem.DropDownItems.Add(item);
-
-        if (Theme.Current != null && Theme.Current.Id == theme.Id) {
-          item.Checked = true;
+      var currentItem = CustomTheme.FillThemesMenu((title, theme, onClick) => {
+        if (theme == null && onClick == null) {
+          themeMenuItem.DropDownItems.Add(title);
+          return null;
         }
-      }
-    }
-
-    private void OnThemeMenuItemClick(object sender, EventArgs e) {
-      if (sender is not ToolStripRadioButtonMenuItem item || item.Tag is not Theme theme)
-        return;
-      item.Checked = true;
-      Theme.Current = theme;
-      settings.SetValue("theme", theme.Id);
+        var item = new ToolStripRadioButtonMenuItem(title, null, onClick);
+        themeMenuItem.DropDownItems.Add(item);
+        return item;
+      }, () => {
+        settings.SetValue("theme", Theme.IsAutoThemeEnabled ? "auto" : Theme.Current.Id);
+      }, settings.GetValue("theme", "auto"), "rdpWrapper.themes");
+      currentItem?.PerformClick();
+      Theme.Current.Apply(this);
     }
 
     private void btnRestartService_Click(object sender, EventArgs e) {
