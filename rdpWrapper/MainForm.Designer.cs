@@ -622,7 +622,7 @@ namespace rdpWrapper {
       // siteToolStripMenuItem
       // 
       this.siteToolStripMenuItem.Name = "siteToolStripMenuItem";
-      this.siteToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
+      this.siteToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F1)));
       this.siteToolStripMenuItem.Size = new System.Drawing.Size(345, 34);
       this.siteToolStripMenuItem.Text = "Site";
       this.siteToolStripMenuItem.Click += new System.EventHandler(this.siteToolStripMenuItem_Click);
@@ -630,7 +630,7 @@ namespace rdpWrapper {
       // aboutToolStripMenuItem
       // 
       this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-      this.aboutToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F1)));
+      this.aboutToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
       this.aboutToolStripMenuItem.Size = new System.Drawing.Size(345, 34);
       this.aboutToolStripMenuItem.Text = "About";
       this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
