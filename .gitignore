@@ -10,3 +10,4 @@
 .vs/
 *.DotSettings.user
 .idea/
+FodyWeavers.xsd
