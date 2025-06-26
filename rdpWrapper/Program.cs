@@ -60,6 +60,14 @@ namespace rdpWrapper {
         Environment.Exit(0);
       }
 
+      if (WinApiHelper.CheckRunningInstances(true, true)) {
+        // fallback
+        MessageBox.Show($"{Updater.ApplicationName} is already running.", Updater.ApplicationName,
+          MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+        return;
+      }
+
+
       if (Environment.Is64BitOperatingSystem != Environment.Is64BitProcess) {
         if (consoleMode) {
           logger.Log($"You are running an application build made for a different OS architecture.\nIt is not compatible!", Logger.StateKind.Error);

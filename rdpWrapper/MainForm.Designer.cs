@@ -60,6 +60,7 @@ namespace rdpWrapper {
       this.generateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
       this.addUserToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+      this.fixMSUserMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.manageUsersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.manageUsersoldToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
       this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -471,6 +472,7 @@ namespace rdpWrapper {
             this.generateMenuItem,
             this.toolStripMenuItem3,
             this.addUserToolStripMenuItem,
+            this.fixMSUserMenuItem,
             this.manageUsersToolStripMenuItem,
             this.manageUsersoldToolStripMenuItem});
       this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
@@ -516,6 +518,13 @@ namespace rdpWrapper {
       this.addUserToolStripMenuItem.Size = new System.Drawing.Size(265, 34);
       this.addUserToolStripMenuItem.Text = "Create RD user";
       this.addUserToolStripMenuItem.Click += new System.EventHandler(this.addUserToolStripMenuItem_Click);
+      // 
+      // fixMSUserMenuItem
+      // 
+      this.fixMSUserMenuItem.Name = "fixMSUserMenuItem";
+      this.fixMSUserMenuItem.Size = new System.Drawing.Size(265, 34);
+      this.fixMSUserMenuItem.Text = "Fix Microsoft account local cache";
+      this.fixMSUserMenuItem.Click += new System.EventHandler(this.fixMSUserMenuItem_Click);
       // 
       // manageUsersToolStripMenuItem
       // 
@@ -719,6 +728,7 @@ namespace rdpWrapper {
     private ToolStripMenuItem generateMenuItem;
     private ToolStripMenuItem restartServiceMenuItem;
     private ToolStripMenuItem addUserToolStripMenuItem;
+    private ToolStripMenuItem fixMSUserMenuItem;
     private ToolStripMenuItem manageUsersToolStripMenuItem;
     private ToolStripMenuItem manageUsersoldToolStripMenuItem;
     private ToolStripMenuItem preferencesToolStripMenuItem;

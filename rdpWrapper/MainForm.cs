@@ -200,6 +200,20 @@ namespace rdpWrapper {
       timer.Enabled = true;
     }
 
+    protected override void WndProc(ref Message m) {
+
+      base.WndProc(ref m);
+      if (m.Msg == WinApiHelper.WM_SHOWME) {
+        if (WindowState == FormWindowState.Minimized)
+          WindowState = FormWindowState.Normal;
+        BringToFront();
+        Activate();
+        bool top = TopMost;
+        TopMost = true;
+        TopMost = top;
+      }
+    }
+
     private void checkFoNewVersionToolStripMenuItem_Click(object sender, EventArgs e) {
       Updater.CheckForUpdates(false);
     }
@@ -469,6 +483,32 @@ namespace rdpWrapper {
       finally {
         SetControlsState(true);
         addUserToolStripMenuItem.Enabled = true;
+      }
+    }
+
+    private void fixMSUserMenuItem_Click(object sender, EventArgs e) {
+      try {
+        SetControlsState(false);
+        fixMSUserMenuItem.Enabled = false;
+        if (InputForm.GetValue(Updater.ApplicationName, "Enter MS account 'User name':", out var userName) == DialogResult.OK) {
+          var process = Process.Start("runAs", $"/u:{userName} \"{Updater.CurrentFileLocation}\"");
+          if (process != null) {
+            process.WaitForExit(10000);
+            if (process.ExitCode == 0) {
+              MessageBox.Show("Action completed successfully!", Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+              return;
+            }
+          }
+          MessageBox.Show("Oops, something went wrong. Please try again later.", Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+      }
+      catch (Exception ex) {
+        logger.Log(ex.Message, Logger.StateKind.Error);
+        MessageBox.Show(ex.Message, Updater.ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+      }
+      finally {
+        SetControlsState(true);
+        fixMSUserMenuItem.Enabled = true;
       }
     }
 
