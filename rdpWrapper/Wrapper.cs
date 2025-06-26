@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.ServiceProcess;
+using System.Text;
 using Microsoft.Win32;
 using sergiye.Common;
 
@@ -60,10 +62,12 @@ namespace rdpWrapper {
     private readonly Logger logger;
     private readonly ServiceHelper serviceHelper;
     private readonly RegistryView registryView = Environment.Is64BitOperatingSystem ? RegistryView.Registry64 : RegistryView.Registry32;
+    private readonly Aes aes;
 
     internal Wrapper(Logger logger) {
       this.logger = logger;
       serviceHelper = new ServiceHelper(logger);
+      aes = GetAes();
 
       WrapperFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "RDP Wrapper");
 
@@ -540,9 +544,43 @@ namespace rdpWrapper {
       if (serviceState.HasValue)
         serviceHelper.StartService(RdpServiceName, TimeSpan.FromSeconds(10));
     }
-    
+
     #region supplementary methods
-    
+
+    private Aes GetAes() {
+      var aes = Aes.Create();
+      byte[] salt = Encoding.UTF8.GetBytes(Updater.ApplicationTitle);
+      using (var keyDerivation = new Rfc2898DeriveBytes(Updater.ApplicationName, salt, 100_000, HashAlgorithmName.SHA256)) {
+        aes.Key = keyDerivation.GetBytes(32);
+        aes.IV = keyDerivation.GetBytes(16); ;
+      }
+      aes.Padding = PaddingMode.PKCS7;
+      aes.Mode = CipherMode.CBC;
+      return aes;
+    }
+
+    public void EncryptResources() {
+      var externalsPath = Path.Combine(Path.GetDirectoryName(Updater.CurrentFileLocation), "../externals");
+      var di = new DirectoryInfo(externalsPath);
+      if (!di.Exists)
+        return;
+      foreach (var fi in di.EnumerateFiles("*.*", SearchOption.AllDirectories)) {
+        var memoryStream = new MemoryStream();
+        using (var cryptoStream = new CryptoStream(memoryStream, aes.CreateEncryptor(), CryptoStreamMode.Write)) {
+          using (var fileStream = File.OpenRead(fi.FullName)) {
+            fileStream.CopyTo(cryptoStream);
+            cryptoStream.FlushFinalBlock();
+          }
+          memoryStream.Position = 0;
+          fi.Delete();
+          var newFileName = fi.FullName + ".cr";
+          using (var fileStream = File.Create(newFileName)) {
+            memoryStream.CopyTo(fileStream);
+          }
+        }
+      }
+    }
+
     private string ExtractResourceFile(string resourceName, string path, bool deleteExisting = false, bool archPrefix = false) {
       var filePath = Path.Combine(path, resourceName);
       if (File.Exists(filePath)) {
@@ -553,6 +591,7 @@ namespace rdpWrapper {
       }
       try {
         var type = GetType();
+        resourceName += ".cr";
         var scriptsPath = archPrefix 
           ? $"{type.Namespace}.externals.{(Environment.Is64BitOperatingSystem ? "x64" : "x86")}.{resourceName}"
           : $"{type.Namespace}.externals.{resourceName}";
@@ -561,7 +600,9 @@ namespace rdpWrapper {
           throw new Exception($"Resource '{resourceName}' is not found!");
         using var fileStream = File.Create(filePath);
         stream.Seek(0, SeekOrigin.Begin);
-        stream.CopyTo(fileStream);
+        //stream.CopyTo(fileStream);
+        using var cryptoStream = new CryptoStream(stream, aes.CreateDecryptor(), CryptoStreamMode.Read);
+        cryptoStream.CopyTo(fileStream);
         return filePath;
       }
       catch (Exception ex) {
