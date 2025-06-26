@@ -553,14 +553,15 @@ namespace rdpWrapper {
       }
       try {
         var type = GetType();
-        
         var scriptsPath = archPrefix 
           ? $"{type.Namespace}.externals.{(Environment.Is64BitOperatingSystem ? "x64" : "x86")}.{resourceName}"
           : $"{type.Namespace}.externals.{resourceName}";
         using var stream = type.Assembly.GetManifestResourceStream(scriptsPath);
+        if (stream == null)
+          throw new Exception($"Resource '{resourceName}' is not found!");
         using var fileStream = File.Create(filePath);
-        stream?.Seek(0, SeekOrigin.Begin);
-        stream?.CopyTo(fileStream);
+        stream.Seek(0, SeekOrigin.Begin);
+        stream.CopyTo(fileStream);
         return filePath;
       }
       catch (Exception ex) {
