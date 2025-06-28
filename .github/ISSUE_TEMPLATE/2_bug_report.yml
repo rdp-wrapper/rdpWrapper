@@ -1,0 +1,75 @@
+name: Bug Report
+description: Something isn't working correctly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > Before you start, check if there are already open or resolved similar issues.
+  
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which App version do you use?
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      description: Which operating system do you use?
+      placeholder: e.g. Windows 11 21H2 build 22000
+    validations:
+      required: true
+  - type: textarea
+    id: troubleshoot
+    attributes:
+      label: What is wrong?
+      description: Provide detailed description of what is wrong or does not work as expected.
+      placeholder: Provide detailed description of what is wrong or does not work as expected.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What did you try already?
+      description: Provide detailed description of how did you troubleshoot the issue and what have you tried already.
+      placeholder: Provide detailed description of how did you troubleshoot the issue and what have you tried already.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce the bug?
+      description: Describe how to reproduce the behavior. Be as specific as possible and provide as many details as possible.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: What is the behavior that you expected?
+      description: Describe what did you expect would happen.
+      placeholder: Describe what did you expect would happen.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      placeholder: Please drag and drop log files here.
+      description: Please drag and drop log files here.
+    validations:
+      required: true
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional information
+      description: If applicable, add screenshots or other relevant information to help explain your problem.
