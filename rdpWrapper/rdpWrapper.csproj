@@ -114,9 +114,11 @@
     <None Remove="externals\x64\Zydis.dll.cr" />
     <None Remove="externals\x64\TermWrap.dll.cr" />
     <None Remove="externals\x64\UmWrap.dll.cr" />
+    <None Remove="externals\x64\EndpWrap.dll.cr" />
     <EmbeddedResource Include="externals\x64\Zydis.dll.cr" />
     <EmbeddedResource Include="externals\x64\TermWrap.dll.cr" />
     <EmbeddedResource Include="externals\x64\UmWrap.dll.cr" />
+    <EmbeddedResource Include="externals\x64\EndpWrap.dll.cr" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\themes\*.json" Link="themes\%(Filename)%(Extension)" />
