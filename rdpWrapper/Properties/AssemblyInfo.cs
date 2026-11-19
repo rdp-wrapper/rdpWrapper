@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("RDP Wrapper")]
 [assembly: AssemblyDescription("RDP Wrapper setup and configuration utility")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SergiyE")]
+[assembly: AssemblyCompany("rdp-wrapper")]
 [assembly: AssemblyProduct("RDPWrapper")]
 [assembly: AssemblyCopyright("Copyright © Sergiy Egoshyn 2025")]
 [assembly: AssemblyTrademark("")]

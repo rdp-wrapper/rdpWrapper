@@ -1,7 +1,7 @@
 # RDP Wrapper
-[![Release](https://img.shields.io/github/v/release/sergiye/rdpWrapper)](https://github.com/sergiye/rdpWrapper/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/sergiye/rdpWrapper/total?color=ff4f42)](https://sergiye.github.io/github-release-stats/?username=sergiye&repository=rdpWrapper&page=1&per_page=100)
-![Last commit](https://img.shields.io/github/last-commit/sergiye/rdpWrapper?color=00AD00)
+[![Release](https://img.shields.io/github/v/release/rdp-wrapper/rdpWrapper)](https://github.com/rdp-wrapper/rdpWrapper/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/rdp-wrapper/rdpWrapper/total?color=ff4f42)](https://sergiye.github.io/github-release-stats/?username=rdp-wrapper&repository=rdpWrapper&page=1&per_page=100)
+![Last commit](https://img.shields.io/github/last-commit/rdp-wrapper/rdpWrapper?color=00AD00)
 
 [![](https://img.shields.io/badge/WINDOWS-7%20%E2%80%93%2011-blue)](https://endoflife.date/windows)
 [![](https://img.shields.io/badge/SERVER-2012%20%E2%80%93%202025-blue)](https://endoflife.date/windows-server)
@@ -44,14 +44,14 @@ The application is portable and has the following features:
 
   - auto-update application to the latest version
   - open 'wrap.ini' in editor
-  - console mode with file output ([#16](https://github.com/sergiye/rdpWrapper/issues/16))
+  - console mode with file output ([#16](https://github.com/rdp-wrapper/rdpWrapper/issues/16))
   - choose where to store settings: file or registry
-  - optionally add Defender exclusion ([#6](https://github.com/sergiye/rdpWrapper/issues/6))
+  - optionally add Defender exclusion ([#6](https://github.com/rdp-wrapper/rdpWrapper/issues/6))
   - optionally add firewall rule when RDP port changed
-  - create a user and add to rdp group ([#9](https://github.com/sergiye/rdpWrapper/issues/9))
+  - create a user and add to rdp group ([#9](https://github.com/rdp-wrapper/rdpWrapper/issues/9))
   - open user management (new/old style)
-  - check if Microsoft Visual C++ 2015-2022 Redistributable is installed ([#7](https://github.com/sergiye/rdpWrapper/issues/7))
-  - fix Microsoft account local cache ([#10](https://github.com/sergiye/rdpWrapper/issues/10))
+  - check if Microsoft Visual C++ 2015-2022 Redistributable is installed ([#7](https://github.com/rdp-wrapper/rdpWrapper/issues/7))
+  - fix Microsoft account local cache ([#10](https://github.com/rdp-wrapper/rdpWrapper/issues/10))
   - configuring display/hide of [client security warnings](https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/remotepc/understanding-security-warnings)
   - configuring client USB device redirection restrictions
 
@@ -61,7 +61,7 @@ The application is portable and has the following features:
 
 Here's a preview of the app's UI running on Windows 10:
 
-[<img src="https://github.com/sergiye/rdpWrapper/raw/master/preview.png" alt="Themes" width="300"/>](https://raw.githubusercontent.com/sergiye/rdpWrapper/master/preview.png)
+[<img src="https://github.com/rdp-wrapper/rdpWrapper/raw/master/preview.png" alt="Themes" width="300"/>](https://raw.githubusercontent.com/rdp-wrapper/rdpWrapper/master/preview.png)
 
 Also there are:
  - `Light`/`Dark` themes with auto switching mode.
@@ -87,7 +87,7 @@ Don't forget to restart the app to scan for new theme files!
 
 ## Download
 
-The published version can be obtained from [releases](https://github.com/sergiye/rdpWrapper/releases).
+The published version can be obtained from [releases](https://github.com/rdp-wrapper/rdpWrapper/releases).
 
 > [!WARNING]
 >Microsoft and other major antivirus vendors have flagged RdpWrapper as "malware". This is likely due to Microsoft's hatred against RdpWrapper, not because it contains a virus or such. Flags from Microsoft usually spread to other antivirus vendors.
@@ -141,13 +141,13 @@ You can check if it works properly on your PC. If you notice any inaccuracies, p
 
 Also, don't forget to ★ star ★ the repository to help other people find it.
 
-<!-- [![Star History Chart](https://api.star-history.com/svg?repos=sergiye/rdpwrapper&type=Date)](https://star-history.com/#sergiye/rdpwrapper&Date) -->
+<!-- [![Star History Chart](https://api.star-history.com/svg?repos=rdp-wrapper/rdpwrapper&type=Date)](https://star-history.com/#rdp-wrapper/rdpwrapper&Date) -->
 
-[//]: # ([![Stargazers over time]&#40;https://starchart.cc/sergiye/rdpwrapper.svg?variant=adaptive&#41;]&#40;https://starchart.cc/sergiye/rdpwrapper&#41;)
+[//]: # ([![Stargazers over time]&#40;https://starchart.cc/rdp-wrapper/rdpwrapper.svg?variant=adaptive&#41;]&#40;https://starchart.cc/rdp-wrapper/rdpwrapper&#41;)
 
-<!-- [![Stargazers](https://reporoster.com/stars/sergiye/rdpWrapper)](https://star-history.com/#sergiye/rdpWrapper&Date) -->
+<!-- [![Stargazers](https://reporoster.com/stars/rdp-wrapper/rdpWrapper)](https://star-history.com/#rdp-wrapper/rdpWrapper&Date) -->
 
-<!-- [![Forkers](https://reporoster.com/forks/sergiye/rdpWrapper)](https://github.com/sergiye/rdpWrapper/network/members) -->
+<!-- [![Forkers](https://reporoster.com/forks/rdp-wrapper/rdpWrapper)](https://github.com/rdp-wrapper/rdpWrapper/network/members) -->
 
 ## Donate!
 Every [cup of coffee](https://patreon.com/SergiyE) you donate will help this app become better and let me know that this project is in demand.
